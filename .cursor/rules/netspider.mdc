@@ -1,0 +1,19 @@
+---
+description: NetSpider project rules (canonical source - AGENTS.md)
+globs:
+alwaysApply: true
+---
+
+Follow AGENTS.md in the repository root: it is the canonical instruction file (layout, build/test, code style,
+changelog and PR rules, privacy, releases). Read it before changing anything.
+
+Always:
+- Add a user-facing line under `## [Unreleased]` in CHANGELOG.md for every user-visible change, exactly as described
+  in CHANGELOG-GUIDELINES.md (fixed categories Breaking, New, Improved, Fixed, Security, Removed, Deprecated, in that
+  order; one sentence ending with a period). Otherwise the PR needs the `skip-changelog` label.
+- Use Conventional Commit PR titles and commit messages: `type(scope)!: description`.
+- Run `dotnet test NetworkScan.slnx` before pushing.
+
+Never:
+- push to main, edit released changelog sections, bump versions or create tags;
+- put real names, IPs, MACs, host names or user names in code, tests, screenshots or docs (use `--demo --hide-banners`).

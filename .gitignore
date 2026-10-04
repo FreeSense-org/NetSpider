@@ -1,0 +1,12 @@
+bin/
+obj/
+*.user
+.vs/
+.idea/
+TestResults/
+.claude/
+*.pcapng
+publish/
+.DS_Store
+Thumbs.db
+artifacts/

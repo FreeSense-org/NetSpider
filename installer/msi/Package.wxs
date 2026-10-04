@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FreeSense NetSpider - machine-wide MSI (WiX v5). See NetSpider.Msi.wixproj for how to build it. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <!-- Stable UpgradeCode per architecture: never change these, or MajorUpgrade stops replacing older installs. -->
+  <?if $(sys.BUILDARCH) = "x64" ?>
+    <?define UpgradeCode = "F1FD6EBE-1E7C-40F5-BB8D-08194EC279D9" ?>
+    <?define ArchName = "x64" ?>
+  <?elseif $(sys.BUILDARCH) = "arm64" ?>
+    <?define UpgradeCode = "2B6C6855-507E-4F2A-A195-DA09F83D4319" ?>
+    <?define ArchName = "ARM64" ?>
+  <?elseif $(sys.BUILDARCH) = "x86" ?>
+    <?define UpgradeCode = "E1855F3E-90E4-4FB1-8744-2F7BBAB27C33" ?>
+    <?define ArchName = "x86" ?>
+  <?else?>
+    <?error Unsupported platform $(sys.BUILDARCH) (use x64, arm64 or x86) ?>
+  <?endif?>
+
+  <Package Name="FreeSense NetSpider"
+           Manufacturer="FreeSense.org"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="$(var.UpgradeCode)"
+           Scope="perMachine"
+           Compressed="yes"
+           Language="1033">
+    <SummaryInformation Description="FreeSense NetSpider $(var.ProductVersion) ($(var.ArchName)) - network diagnostics, a FreeSense project" />
+
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of FreeSense NetSpider is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Apps & Features (ARP) -->
+    <?if $(var.ProductIcon) != "" ?>
+      <Icon Id="NetSpiderIcon" SourceFile="$(var.ProductIcon)" />
+      <Property Id="ARPPRODUCTICON" Value="NetSpiderIcon" />
+    <?endif?>
+    <Property Id="ARPHELPLINK" Value="https://freesense.org" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/FreeSense-org/NetSpider" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/FreeSense-org/NetSpider/releases" />
+    <Property Id="ARPCOMMENTS" Value="Network diagnostics - a FreeSense project (https://freesense.org). Requires Npcap (https://npcap.com), installed separately." />
+    <!-- Marker property (also visible in MSI logs / inventory tools). -->
+    <Property Id="INSTALLMODE" Value="msi" />
+
+    <!-- Simple UI: Welcome, License, Install folder, Progress, Finish. /qn installs silently. -->
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <?if $(var.BannerBmp) != "" ?>
+      <WixVariable Id="WixUIBannerBmp" Value="$(var.BannerBmp)" />
+    <?endif?>
+    <?if $(var.DialogBmp) != "" ?>
+      <WixVariable Id="WixUIDialogBmp" Value="$(var.DialogBmp)" />
+    <?endif?>
+
+    <!-- Program Files\FreeSense\NetSpider (x86 package -> Program Files (x86); x64/arm64 -> Program Files). -->
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="FreeSenseFolder" Name="FreeSense">
+        <Directory Id="INSTALLFOLDER" Name="NetSpider" />
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="FreeSense NetSpider" Level="1" AllowAbsent="no">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="MainExe" />
+      <ComponentGroupRef Id="InstallModeMarker" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <!-- Everything from the self-contained publish folder (harvested at build time), except the main exe below. -->
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.PublishDir)**">
+        <Exclude Files="$(var.PublishDir)NetSpider.exe" />
+        <Exclude Files="$(var.PublishDir)**.pdb" />
+        <Exclude Files="$(var.PublishDir)install-mode.txt" />
+      </Files>
+    </ComponentGroup>
+
+    <Component Id="MainExe" Directory="INSTALLFOLDER">
+      <File Id="NetSpiderExe" Source="$(var.PublishDir)NetSpider.exe" KeyPath="yes">
+        <!-- Start menu shortcut (non-advertised, so it shows the exe's own icon). -->
+        <Shortcut Id="StartMenuShortcut"
+                  Directory="ProgramMenuFolder"
+                  Name="FreeSense NetSpider"
+                  Description="FreeSense NetSpider - network diagnostics"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Advertise="no" />
+      </File>
+    </Component>
+
+    <!-- Lets the app know it is MSI-managed (no self-update; "managed by your administrator"):
+         HKLM\Software\FreeSense\NetSpider\InstallMode = "msi" (x86 package: the WOW6432Node view, which is what the
+         32-bit app reads) and install-mode.txt = "msi" next to NetSpider.exe. -->
+    <ComponentGroup Id="InstallModeMarker" Directory="INSTALLFOLDER">
+      <Component Id="InstallModeRegistry">
+        <RegistryKey Root="HKLM" Key="Software\FreeSense\NetSpider">
+          <RegistryValue Name="InstallMode" Type="string" Value="msi" KeyPath="yes" />
+          <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" />
+          <RegistryValue Name="Version" Type="string" Value="$(var.ProductVersion)" />
+        </RegistryKey>
+      </Component>
+      <Component Id="InstallModeFile">
+        <File Id="InstallModeTxt" Source="install-mode.txt" Name="install-mode.txt" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

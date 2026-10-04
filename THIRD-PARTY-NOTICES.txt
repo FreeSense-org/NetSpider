@@ -1,0 +1,203 @@
+FreeSense NetSpider - Third-Party Notices
+=========================================
+
+NetSpider is a FreeSense project (https://freesense.org).
+Source: https://github.com/FreeSense-org/NetSpider
+NetSpider itself is licensed under the MIT License (see LICENSE.txt).
+
+NetSpider incorporates the third-party components listed below. Each component is
+distributed under its own license; the license identifiers were taken from the
+package metadata (nuspec) of the exact versions shipped. The original copyright
+notices and license terms are reproduced or referenced below. Where only a summary
+is given, the full license text is available at the linked URL and in the
+component's source repository.
+
+The installers (Setup.exe, MSI) and the portable zip contain a self-contained .NET
+runtime, so the .NET runtime components are redistributed as well.
+
+
+-------------------------------------------------------------------------------
+1. Component list
+-------------------------------------------------------------------------------
+
+Component                                   License        Project / source
+------------------------------------------  -------------  ------------------------------------------------
+.NET Runtime 10 (self-contained runtime)    MIT            https://github.com/dotnet/runtime
+Microsoft.Extensions.* (Hosting, Logging,   MIT            https://github.com/dotnet/runtime
+  Configuration, DependencyInjection,
+  Options, FileProviders, Primitives),
+  System.Diagnostics.EventLog
+Microsoft.Data.Sqlite / .Core               MIT            https://github.com/dotnet/efcore
+SQLitePCLRaw (core, bundle_e_sqlite3,       Apache-2.0     https://github.com/ericsink/SQLitePCL.raw
+  provider.e_sqlite3, lib.e_sqlite3)
+SQLite (e_sqlite3 native library)           Public domain  https://www.sqlite.org/copyright.html
+Avalonia (Avalonia, Desktop, Win32, Skia,   MIT            https://github.com/AvaloniaUI/Avalonia
+  Themes.Fluent, Fonts.Inter,
+  Controls.DataGrid, Native, X11,
+  FreeDesktop, Remote.Protocol)
+Avalonia.Angle.Windows.Natives (ANGLE)      BSD-3-Clause   https://chromium.googlesource.com/angle/angle
+Inter font (bundled by Avalonia.Fonts.Inter) OFL-1.1       https://github.com/rsms/inter
+MicroCom.Runtime                            MIT            https://github.com/kekekeks/MicroCom
+Tmds.DBus.Protocol                          MIT            https://github.com/tmds/Tmds.DBus
+SkiaSharp, SkiaSharp.HarfBuzz,              MIT            https://github.com/mono/SkiaSharp
+  SkiaSharp.NativeAssets.*
+Skia (native graphics library in libSkiaSharp) BSD-3-Clause https://skia.org/
+HarfBuzzSharp, HarfBuzzSharp.NativeAssets.* MIT            https://github.com/mono/SkiaSharp
+HarfBuzz (native text shaping library)      MIT ("Old MIT") https://github.com/harfbuzz/harfbuzz
+Svg.Skia, Svg.Model, ShimSkiaSharp,         MIT            https://github.com/wieslawsoltes/Svg.Skia
+  Avalonia.Svg.Skia
+Svg.Custom (derived from SVG.NET)           MS-PL          https://github.com/wieslawsoltes/Svg.Skia
+                                                           https://github.com/svg-net/SVG
+ExCSS                                       MIT            https://github.com/TylerBrinks/ExCSS
+CommunityToolkit.Mvvm                       MIT            https://github.com/CommunityToolkit/dotnet
+SharpPcap                                   MIT            https://github.com/dotpcap/sharppcap
+PacketDotNet                                MPL-2.0        https://github.com/dotpcap/packetnet
+AngleSharp                                  MIT            https://github.com/AngleSharp/AngleSharp
+Lextm.SharpSnmpLib (#SNMP)                  MIT            https://github.com/lextudio/sharpsnmplib
+Serilog, Serilog.Sinks.File,                Apache-2.0     https://github.com/serilog/serilog
+  Serilog.Sinks.Console,
+  Serilog.Extensions.Hosting,
+  Serilog.Extensions.Logging
+Velopack (installer / update framework)     MIT            https://github.com/velopack/velopack
+IEEE OUI registry data (oui.txt)            see section 5  https://standards-oui.ieee.org/
+
+Build-time only (not distributed): MinVer (Apache-2.0, https://github.com/adamralph/minver),
+WiX Toolset (MS-RL, https://wixtoolset.org), xUnit and test tooling.
+
+
+-------------------------------------------------------------------------------
+2. MIT License
+-------------------------------------------------------------------------------
+
+Applies to: .NET Runtime, Microsoft.Extensions.*, System.Diagnostics.EventLog,
+Microsoft.Data.Sqlite (Copyright (c) .NET Foundation and Contributors);
+Avalonia (Copyright (c) AvaloniaUI OÜ and contributors); MicroCom.Runtime;
+Tmds.DBus.Protocol (Copyright (c) Tom Deseyn); SkiaSharp and HarfBuzzSharp
+(Copyright (c) 2015-2016 Xamarin, Inc., Copyright (c) 2017-2018 Microsoft
+Corporation); Svg.Skia, Svg.Model, ShimSkiaSharp, Avalonia.Svg.Skia (Copyright (c)
+Wiesław Šoltés); ExCSS (Copyright (c) Tyler Brinks); CommunityToolkit.Mvvm
+(Copyright (c) .NET Foundation and Contributors); SharpPcap (Copyright (c) Tamir
+Gal, Chris Morgan and others); AngleSharp (Copyright (c) AngleSharp); #SNMP /
+Lextm.SharpSnmpLib (Copyright (c) Malcolm Crowe, Lex Li, and other contributors);
+Velopack (Copyright (c) Velopack Ltd.); HarfBuzz (Old MIT variant, Copyright (c)
+the HarfBuzz authors).
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+
+
+-------------------------------------------------------------------------------
+3. Apache License 2.0
+-------------------------------------------------------------------------------
+
+Applies to: Serilog, Serilog.Sinks.File, Serilog.Sinks.Console,
+Serilog.Extensions.Hosting, Serilog.Extensions.Logging (Copyright (c) Serilog
+Contributors); SQLitePCLRaw (Copyright (c) Eric Sink / SourceGear).
+
+Full text: https://www.apache.org/licenses/LICENSE-2.0
+
+Summary: you may use, reproduce and distribute the work in source or object form,
+provided that you give recipients a copy of the license, keep copyright, patent,
+trademark and attribution notices, and state significant changes. The license
+includes an express patent grant from contributors. The work is provided
+"AS IS", WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND. NetSpider ships these
+components unmodified.
+
+
+-------------------------------------------------------------------------------
+4. Other licenses
+-------------------------------------------------------------------------------
+
+PacketDotNet - Mozilla Public License 2.0 (MPL-2.0)
+  Copyright (c) Chris Morgan and the PacketDotNet contributors.
+  Full text: https://www.mozilla.org/en-US/MPL/2.0/
+  NetSpider uses PacketDotNet unmodified as a separate library (PacketDotNet.dll).
+  The source code of PacketDotNet, including the exact version shipped (1.4.8),
+  is available at https://github.com/dotpcap/packetnet and from
+  https://www.nuget.org/packages/PacketDotNet/1.4.8 . MPL-2.0 is a file-level
+  copyleft license; it does not extend to NetSpider's own code.
+
+Svg.Custom / SVG.NET - Microsoft Public License (MS-PL)
+  Copyright (c) the SVG.NET contributors.
+  Full text: https://opensource.org/license/ms-pl-html
+  Distributed in compiled form under the terms of the MS-PL; it is provided
+  "as-is" with no express warranties, guarantees or conditions.
+
+ANGLE (Avalonia.Angle.Windows.Natives) and Skia - BSD 3-Clause License
+  Copyright 2018 The ANGLE Project Authors. All rights reserved.
+  Copyright (c) 2011 Google Inc. All rights reserved. (Skia)
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+      * Redistributions of source code must retain the above copyright notice,
+        this list of conditions and the following disclaimer.
+      * Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+      * Neither the name of the copyright holders nor the names of their
+        contributors may be used to endorse or promote products derived from
+        this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+
+Inter font - SIL Open Font License 1.1 (OFL-1.1)
+  Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter).
+  Full text: https://openfontlicense.org/open-font-license-official-text/
+
+SQLite - Public domain
+  The SQLite library (e_sqlite3) is in the public domain.
+  See https://www.sqlite.org/copyright.html
+
+
+-------------------------------------------------------------------------------
+5. IEEE OUI registry data
+-------------------------------------------------------------------------------
+
+NetSpider includes a compressed copy of the IEEE Registration Authority's public
+MA-L (OUI) listing (oui.txt), used to map MAC address prefixes to vendor names.
+The data is published by the IEEE Registration Authority at
+https://standards-oui.ieee.org/oui/oui.txt and is the property of the IEEE and
+the respective assignees. It is included for informational lookup only;
+vendor names and trademarks belong to their respective owners. The IEEE does not
+endorse NetSpider. The listing may be outdated or incomplete.
+
+
+-------------------------------------------------------------------------------
+6. Npcap (NOT distributed with NetSpider)
+-------------------------------------------------------------------------------
+
+Packet capture and injection require Npcap (https://npcap.com), developed by the
+Nmap Project / Nmap Software LLC. Npcap is NOT included in NetSpider's
+installers, MSI or portable zip, and NetSpider does not redistribute it. Its
+license does not permit redistribution without a separate OEM agreement.
+
+When Npcap is missing, NetSpider can download the official installer directly
+from https://npcap.com and launch it after verifying its Authenticode signature;
+you install Npcap separately and accept its own license
+(https://npcap.com/oem/redist.html, https://github.com/nmap/npcap/blob/master/LICENSE).
+NetSpider talks to Npcap through SharpPcap at run time only.

@@ -1,0 +1,60 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NetSpider.App.ViewModels"
+             xmlns:c="using:NetSpider.App.Controls"
+             x:Class="NetSpider.App.Views.HealthView"
+             x:DataType="vm:HealthViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="18,14,22,18" Spacing="14">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock Text="Network health" Classes="h1" />
+          <TextBlock Text="{Binding LastRun, StringFormat='Last run: {0}'}" Classes="caption" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button Classes="accent" Command="{Binding RunCommand}" Content="Run health check" ToolTip.Tip="{Binding RunTooltip}" ToolTip.ShowOnDisabled="True" />
+          <Button Classes="magenta" Command="{Binding RunBufferbloatCommand}" Content="Run bufferbloat test"
+                  ToolTip.Tip="Measures latency under load for ~20 s (saturates your uplink briefly)" ToolTip.ShowOnDisabled="True" />
+        </StackPanel>
+      </Grid>
+      <TextBlock Text="{Binding Status}" Classes="dim" IsVisible="{Binding IsRunning}" />
+
+      <Grid ColumnDefinitions="360,*">
+        <Border Classes="card glow" Margin="0,0,14,0" VerticalAlignment="Top">
+          <StackPanel>
+            <c:Gauge Height="300" Value="{Binding Score}" Maximum="100" HighIsGood="True" Caption="{Binding Grade}" Thickness="18" />
+            <TextBlock Text="{Binding Summary}" HorizontalAlignment="Center" Classes="dim" Margin="0,4,0,0" />
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Column="1" Classes="card">
+          <StackPanel>
+            <TextBlock Text="CHECKS" Classes="section" Margin="0,0,0,8" />
+            <TextBlock Text="No health report yet. Start monitoring and run a health check (or enable the demo network)." Classes="dim" IsVisible="{Binding !HasReport}" TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding Checks}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:CheckRow">
+                  <Border Background="{Binding Soft}" CornerRadius="10" Padding="12,9" Margin="0,3">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                      <Path Classes="icon" Data="{Binding Icon}" Stroke="{Binding Brush}" Width="20" Height="20" VerticalAlignment="Top" />
+                      <StackPanel Grid.Column="1" Margin="12,0" Spacing="2">
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Summary}" Classes="dim" FontSize="12.5" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Details}" Classes="caption" TextWrapping="Wrap" IsVisible="{Binding HasDetails}" />
+                        <TextBlock Text="{Binding DeviceName, StringFormat='Device: {0}'}" Foreground="{StaticResource CyanBrush}" FontSize="11.5" IsVisible="{Binding HasDevice}" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Status}" Foreground="{Binding Brush}" FontWeight="Bold" FontSize="11" LetterSpacing="1" HorizontalAlignment="Right" />
+                        <TextBlock Text="{Binding Score}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right" />
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

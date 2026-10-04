@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NetSpider.App.ViewModels"
+        x:Class="NetSpider.App.Views.MtrWindow"
+        x:DataType="vm:MtrViewModel"
+        Title="{Binding Title}" Icon="avares://NetSpider/Assets/Brand/netspider.ico" Width="900" Height="560" WindowStartupLocation="CenterOwner">
+  <DockPanel Margin="16">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+      <StackPanel>
+        <TextBlock Text="{Binding Title}" Classes="h2" />
+        <TextBlock Text="{Binding Status}" Classes="caption" />
+      </StackPanel>
+      <Button Grid.Column="1" Classes="accent" Command="{Binding ToggleCommand}" Content="Start / Stop" />
+    </Grid>
+    <Border Classes="card" Padding="0">
+      <DataGrid ItemsSource="{Binding Hops}" IsReadOnly="True" HeadersVisibility="Column" RowHeight="32">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="#" Binding="{Binding Ttl}" Width="44" />
+          <DataGridTextColumn Header="Host" Binding="{Binding Host}" Width="2*" />
+          <DataGridTemplateColumn Header="Loss" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:MtrHop">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="8,0">
+                  <Border Width="50" Height="5" Background="#16213A" CornerRadius="3">
+                    <Border Width="{Binding LossBar}" MaxWidth="50" Background="{Binding LossBrush}" CornerRadius="3" HorizontalAlignment="Left" />
+                  </Border>
+                  <TextBlock Text="{Binding Loss}" Foreground="{Binding LossBrush}" FontSize="12" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="Sent" Binding="{Binding Sent}" Width="72" />
+          <DataGridTextColumn Header="Last" Binding="{Binding Last}" Width="90" />
+          <DataGridTextColumn Header="Avg" Binding="{Binding Avg}" Width="90" />
+          <DataGridTextColumn Header="Best" Binding="{Binding Best}" Width="90" />
+          <DataGridTextColumn Header="Worst" Binding="{Binding Worst}" Width="90" />
+          <DataGridTextColumn Header="Jitter" Binding="{Binding Jitter}" Width="90" />
+        </DataGrid.Columns>
+      </DataGrid>
+    </Border>
+  </DockPanel>
+</Window>

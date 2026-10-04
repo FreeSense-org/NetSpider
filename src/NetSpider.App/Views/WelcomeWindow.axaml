@@ -1,0 +1,244 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NetSpider.App.ViewModels"
+        x:Class="NetSpider.App.Views.WelcomeWindow"
+        x:DataType="vm:WelcomeViewModel"
+        Title="Welcome to FreeSense – NetSpider"
+        Width="880" Height="600" MinWidth="760" MinHeight="560"
+        CanResize="False" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <Style Selector="TextBlock.lead">
+      <Setter Property="FontSize" Value="13.5" />
+      <Setter Property="LineHeight" Value="21" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Foreground" Value="{StaticResource TextDimBrush}" />
+    </Style>
+    <Style Selector="Border.feature">
+      <Setter Property="Background" Value="#0A1020" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrushNeon}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="Margin" Value="0,0,10,10" />
+      <Setter Property="Width" Value="268" />
+    </Style>
+    <Style Selector="CheckBox.opt">
+      <Setter Property="Margin" Value="0,2" />
+    </Style>
+    <Style Selector="Button.step">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="CornerRadius" Value="10" />
+    </Style>
+  </Window.Styles>
+
+  <Grid ColumnDefinitions="230,*">
+    <!-- ======== left: brand + steps ======== -->
+    <Border Grid.Column="0" Background="{StaticResource NavBrush}" BorderBrush="{StaticResource BorderBrushNeon}" BorderThickness="0,0,1,0">
+      <DockPanel Margin="18,22,14,18">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10" Margin="2,0,0,26">
+          <Image Source="avares://NetSpider/Assets/Brand/logo-256.png" Width="36" Height="36" />
+
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="NetSpider" FontSize="17" FontWeight="Bold" />
+            <TextBlock Text="a FreeSense project" Classes="caption" FontSize="10.5" />
+          </StackPanel>
+        </StackPanel>
+
+        <TextBlock DockPanel.Dock="Bottom" Text="{Binding VersionText}" Classes="caption" Margin="4,0,0,0" />
+
+        <ItemsControl ItemsSource="{Binding Steps}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:WelcomeStep">
+              <Button Classes="step" Margin="0,0,0,4"
+                      Command="{Binding $parent[Window].((vm:WelcomeViewModel)DataContext).GoToCommand}" CommandParameter="{Binding}">
+                <Grid ColumnDefinitions="Auto,*">
+                  <Panel Width="28" Height="28" VerticalAlignment="Top">
+                    <Ellipse Fill="#0D1424" Stroke="#33507A" StrokeThickness="1.5" />
+                    <Ellipse Fill="#1A00E5FF" Stroke="{StaticResource CyanBrush}" StrokeThickness="1.5" IsVisible="{Binding IsCurrent}" />
+                    <Ellipse Fill="#2200E5FF" Stroke="#6600E5FF" StrokeThickness="1.5" IsVisible="{Binding IsDone}" />
+                    <TextBlock Text="{Binding Number}" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               IsVisible="{Binding !IsDone}" />
+                    <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource CyanBrush}" StrokeThickness="2" Width="12" Height="12" Stretch="Uniform"
+                          HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsDone}" />
+                  </Panel>
+                  <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13.5" />
+                    <TextBlock Text="{Binding Subtitle}" Classes="caption" FontSize="11" />
+                  </StackPanel>
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </DockPanel>
+    </Border>
+
+    <!-- ======== right: content ======== -->
+    <DockPanel Grid.Column="1">
+      <!-- footer -->
+      <Border DockPanel.Dock="Bottom" Background="#0A1020" BorderBrush="{StaticResource BorderBrushNeon}" BorderThickness="0,1,0,0" Padding="22,12">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Button Classes="ghost" Content="Skip setup" Command="{Binding SkipCommand}"
+                  ToolTip.Tip="Close the wizard — you can reopen it from Settings → Application" />
+          <TextBlock Grid.Column="1" Text="{Binding StepCaption}" Classes="caption" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsNotLastStep}" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+            <Button Classes="ghost" Content="Back" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}" MinWidth="90" HorizontalContentAlignment="Center" />
+            <Button Classes="accent" Content="Next" Command="{Binding NextCommand}" IsVisible="{Binding IsNotLastStep}" MinWidth="110" HorizontalContentAlignment="Center" IsDefault="True" />
+            <Button Classes="magenta" Command="{Binding ExploreDemoCommand}" IsVisible="{Binding IsLastStep}"
+                    ToolTip.Tip="Explore NetSpider with a simulated ~40-device home/office network">
+              <TextBlock Text="Explore the demo network" />
+            </Button>
+            <Button Classes="accent" Command="{Binding StartMonitoringCommand}" IsVisible="{Binding IsLastStep}"
+                    ToolTip.Tip="{Binding Main.MonitorTooltip}" ToolTip.ShowOnDisabled="True">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconPlay}" Width="12" /><TextBlock Text="Start monitoring" /></StackPanel>
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Panel Margin="34,30,34,18">
+        <!-- step 1: welcome -->
+        <StackPanel IsVisible="{Binding IsStep0}" Spacing="14">
+          <StackPanel Orientation="Horizontal" Spacing="18">
+            <Panel Width="84" Height="84">
+              <Image Source="{Binding Logo}" IsVisible="{Binding HasLogo}" Width="84" Height="84" />
+              <Border IsVisible="{Binding !HasLogo}" CornerRadius="22" Background="#1400E5FF" BorderBrush="#6600E5FF" BorderThickness="1.5"
+                      BoxShadow="0 0 34 0 #5500E5FF">
+                <Path Data="{StaticResource IconSpider}" Stroke="{StaticResource AccentGradient}" StrokeThickness="1.6"
+                      StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform" Margin="16" />
+              </Border>
+            </Panel>
+            <StackPanel VerticalAlignment="Center" Spacing="2">
+              <TextBlock Text="Welcome to" Classes="dim" FontSize="14" />
+              <TextBlock Text="FreeSense – NetSpider" FontSize="27" FontWeight="Bold" Foreground="{StaticResource AccentGradient}" />
+            </StackPanel>
+          </StackPanel>
+          <TextBlock Classes="lead" Margin="0,6,0,0"
+                     Text="NetSpider maps and watches your local network at layer 2 and 3: it discovers every device, draws how they are connected, and keeps an eye on latency, broadcast storms, loops, Wi-Fi links and the path to the internet — and when something breaks, it tells you where the fault most likely is." />
+          <WrapPanel Margin="0,6,0,0">
+            <Border Classes="feature"><StackPanel Orientation="Horizontal" Spacing="10">
+              <Path Classes="icon" Data="{StaticResource IconWeb}" Width="18" Height="18" Stroke="{StaticResource CyanBrush}" />
+              <StackPanel><TextBlock Text="Spider web" FontWeight="SemiBold" /><TextBlock Text="Live topology of every device" Classes="caption" /></StackPanel>
+            </StackPanel></Border>
+            <Border Classes="feature"><StackPanel Orientation="Horizontal" Spacing="10">
+              <Path Classes="icon" Data="{StaticResource IconPath}" Width="18" Height="18" Stroke="{StaticResource CyanBrush}" />
+              <StackPanel><TextBlock Text="Path Doctor" FontWeight="SemiBold" /><TextBlock Text="Every hop to the internet" Classes="caption" /></StackPanel>
+            </StackPanel></Border>
+            <Border Classes="feature"><StackPanel Orientation="Horizontal" Spacing="10">
+              <Path Classes="icon" Data="{StaticResource IconStorm}" Width="18" Height="18" Stroke="{StaticResource CyanBrush}" />
+              <StackPanel><TextBlock Text="Storm Center" FontWeight="SemiBold" /><TextBlock Text="Broadcast storms and loops" Classes="caption" /></StackPanel>
+            </StackPanel></Border>
+            <Border Classes="feature"><StackPanel Orientation="Horizontal" Spacing="10">
+              <Path Classes="icon" Data="{StaticResource IconIncident}" Width="18" Height="18" Stroke="{StaticResource CyanBrush}" />
+              <StackPanel><TextBlock Text="Incidents" FontWeight="SemiBold" /><TextBlock Text="Root cause, not just symptoms" Classes="caption" /></StackPanel>
+            </StackPanel></Border>
+          </WrapPanel>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="NetSpider is free and open source, part of the FreeSense project —" Classes="caption" VerticalAlignment="Center" />
+            <Button Classes="link" Content="{Binding Website}" Command="{Binding OpenWebsiteCommand}" FontSize="11.5" />
+          </StackPanel>
+        </StackPanel>
+
+        <!-- step 2: npcap -->
+        <StackPanel IsVisible="{Binding IsStep1}" Spacing="14">
+          <TextBlock Text="Packet capture driver" Classes="h1" />
+          <TextBlock Classes="lead"
+                     Text="NetSpider reads and sends raw Ethernet frames through Npcap, the free packet-capture driver from the Nmap project. Its license doesn't allow bundling it, so it is installed separately — NetSpider can do that for you." />
+          <Border Classes="card glow" Padding="18,16">
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="Auto,*">
+                <Panel Width="40" Height="40">
+                  <Ellipse Fill="#1A2BFF88" Stroke="{StaticResource GreenBrush}" StrokeThickness="1.5" IsVisible="{Binding Main.NpcapInstalled}" />
+                  <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource GreenBrush}" StrokeThickness="2.2" Width="18" Height="18" Stretch="Uniform" IsVisible="{Binding Main.NpcapInstalled}" />
+                  <Ellipse Fill="#1AFFB020" Stroke="{StaticResource AmberBrush}" StrokeThickness="1.5" IsVisible="{Binding !Main.NpcapInstalled}" />
+                  <Path Data="{StaticResource IconWarn}" Stroke="{StaticResource AmberBrush}" StrokeThickness="1.8" Width="18" Height="18" Stretch="Uniform" IsVisible="{Binding !Main.NpcapInstalled}" />
+                </Panel>
+                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center" Spacing="2">
+                  <TextBlock Text="{Binding Main.NpcapStatusText}" FontWeight="SemiBold" FontSize="14.5" TextWrapping="Wrap" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" IsVisible="{Binding Main.NpcapInstalled}"
+                             Text="Everything is ready for live monitoring and scanning." />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" IsVisible="{Binding !Main.NpcapInstalled}"
+                             Text="Without it NetSpider can still show the demo network." />
+                </StackPanel>
+              </Grid>
+              <StackPanel Spacing="10" IsVisible="{Binding !Main.NpcapInstalled}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <Button Classes="accent" Command="{Binding Main.InstallNpcapCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconExport}" Width="13" /><TextBlock Text="Install Npcap" /></StackPanel>
+                  </Button>
+                  <Button Classes="ghost" Content="Download manually" Command="{Binding OpenNpcapSiteCommand}" />
+                </StackPanel>
+                <StackPanel Spacing="5" IsVisible="{Binding Main.NpcapInstallText, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <ProgressBar Value="{Binding Main.NpcapInstallProgress}" Maximum="100" Height="6" MinHeight="6" IsVisible="{Binding Main.IsInstallingNpcap}" />
+                  <TextBlock Text="{Binding Main.NpcapInstallText}" Classes="dim" FontSize="12" TextWrapping="Wrap" />
+                </StackPanel>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <TextBlock Classes="caption" TextWrapping="Wrap"
+                     Text="The installer is downloaded from npcap.com, its digital signature is checked (Nmap Software LLC), and it opens with &quot;WinPcap API-compatible mode&quot; and loopback support preselected. Windows asks for administrator permission." />
+        </StackPanel>
+
+        <!-- step 3: adapter -->
+        <StackPanel IsVisible="{Binding IsStep2}" Spacing="14">
+          <TextBlock Text="Where should NetSpider listen?" Classes="h1" />
+          <TextBlock Classes="lead"
+                     Text="Pick the network adapter that connects this PC to the network you want to see — usually your Ethernet or Wi-Fi connection with a gateway. You can change it any time in the top bar." />
+          <Border Classes="card" Padding="18,16">
+            <StackPanel Spacing="10">
+              <TextBlock Text="CAPTURE ADAPTER" Classes="section" Margin="0" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ComboBox ItemsSource="{Binding Main.Adapters}" SelectedItem="{Binding Main.SelectedAdapter}" Width="440"
+                          PlaceholderText="No adapters found (Npcap required)">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AdapterItem">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Detail}" Classes="dim" FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding VirtualTag}" Foreground="{StaticResource MagentaBrush}" FontSize="11" VerticalAlignment="Center" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Classes="icon" Command="{Binding Main.RefreshAdaptersCommand}" ToolTip.Tip="Refresh adapters">
+                  <Path Classes="icon" Data="M20,12 A8,8 0 1 1 17.7,6.3 M20,4 V8 H16" />
+                </Button>
+              </StackPanel>
+              <TextBlock Classes="caption" TextWrapping="Wrap" IsVisible="{Binding !Main.HasAdapters}"
+                         Text="No adapters are listed because Npcap isn't installed yet — go back one step to install it, or explore the demo network." />
+              <TextBlock Classes="caption" TextWrapping="Wrap" IsVisible="{Binding Main.HasAdapters}"
+                         Text="Adapters marked [virtual] belong to VPNs, Hyper-V or WSL and usually don't see your LAN." />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- step 4: preferences -->
+        <ScrollViewer IsVisible="{Binding IsStep3}" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel Spacing="12">
+            <TextBlock Text="A few preferences" Classes="h1" />
+            <TextBlock Classes="lead" Text="All of these can be changed later in Settings → Application." />
+            <Border Classes="card" Padding="18,12">
+              <StackPanel>
+                <TextBlock Text="RUNNING" Classes="section" Margin="0,2,0,4" />
+                <CheckBox Classes="opt" IsChecked="{Binding AutoStartMonitoring}" Content="Start monitoring automatically when NetSpider opens (last adapter)" />
+                <CheckBox Classes="opt" IsChecked="{Binding StartWithWindows}" Content="Start with Windows (minimized to the tray)" />
+                <TextBlock Classes="caption" Text="{Binding StartWithWindowsHint}" Margin="28,0,0,4" TextWrapping="Wrap" />
+                <CheckBox Classes="opt" IsChecked="{Binding CloseToTray}" Content="Keep running in the tray when the window is closed" />
+                <CheckBox Classes="opt" IsChecked="{Binding InternetMonitor}" Content="Monitor internet connectivity (pings 1.1.1.1, 8.8.8.8 and 9.9.9.9)" />
+                <TextBlock Text="UPDATES" Classes="section" Margin="0,12,0,4" />
+                <RadioButton GroupName="upd" IsChecked="{Binding UpdateNotify}" Content="Just tell me when an update is available" />
+                <RadioButton GroupName="upd" IsChecked="{Binding UpdateDownload}" Content="Download updates automatically and ask before installing" />
+                <RadioButton GroupName="upd" IsChecked="{Binding UpdateOnExit}" Content="Download and install updates when I quit NetSpider" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </Panel>
+    </DockPanel>
+  </Grid>
+</Window>

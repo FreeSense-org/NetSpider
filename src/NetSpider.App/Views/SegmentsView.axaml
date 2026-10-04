@@ -1,0 +1,200 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NetSpider.App.ViewModels"
+             xmlns:m="using:NetSpider.Core.Model"
+             x:Class="NetSpider.App.Views.SegmentsView"
+             x:DataType="vm:SegmentsViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="18,14,22,18" Spacing="14">
+      <StackPanel>
+        <TextBlock Text="Segments &amp; VLANs" Classes="h1" />
+        <TextBlock Text="Subnets, VLANs, DHCP servers, spanning tree, multicast querier and your WAN edge." Classes="caption" />
+      </StackPanel>
+
+      <!-- subnets -->
+      <Border Classes="card">
+        <StackPanel>
+          <TextBlock Text="SUBNETS" Classes="section" Margin="0,0,0,8" />
+          <Grid ColumnDefinitions="170,110,130,130,80,80,90,*" Margin="0,0,0,4">
+            <TextBlock Text="Network" Classes="caption" /><TextBlock Grid.Column="1" Text="Source" Classes="caption" />
+            <TextBlock Grid.Column="2" Text="VLAN" Classes="caption" /><TextBlock Grid.Column="3" Text="Gateway" Classes="caption" />
+            <TextBlock Grid.Column="4" Text="Reach" Classes="caption" /><TextBlock Grid.Column="5" Text="Hosts" Classes="caption" />
+            <TextBlock Grid.Column="6" Text="Scanned" Classes="caption" /><TextBlock Grid.Column="7" Text="Scan" Classes="caption" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Subnets}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:SegmentRow">
+                <Grid ColumnDefinitions="170,110,130,130,80,80,90,*" Margin="0,3">
+                  <TextBlock Text="{Binding Cidr}" Classes="mono" FontWeight="SemiBold" Foreground="#7FEFFF" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Text="{Binding Source}" VerticalAlignment="Center" FontSize="12.5" />
+                  <TextBlock Grid.Column="2" Text="{Binding Vlan}" VerticalAlignment="Center" FontSize="12.5" />
+                  <TextBlock Grid.Column="3" Text="{Binding Gateway}" Classes="mono" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="4" Text="{Binding LocalText}" Foreground="{Binding LocalBrush}" VerticalAlignment="Center" FontSize="12.5" />
+                  <TextBlock Grid.Column="5" Text="{Binding HostsFound}" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="6" Text="{Binding LastScanned}" VerticalAlignment="Center" FontSize="12.5" Classes="dim" />
+                  <CheckBox Grid.Column="7" IsChecked="{Binding ScanEnabled}" ToolTip.Tip="Include in full scans" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="*,*">
+        <!-- VLANs + tag hint -->
+        <Border Classes="card" Margin="0,0,7,0">
+          <StackPanel>
+            <TextBlock Text="VLANS" Classes="section" Margin="0,0,0,8" />
+            <ItemsControl ItemsSource="{Binding Vlans}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:VlanInfo">
+                  <Grid ColumnDefinitions="60,*,90,Auto" Margin="0,3">
+                    <TextBlock Text="{Binding Id}" FontWeight="Bold" Foreground="{StaticResource CyanBrush}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Name}" />
+                    <TextBlock Grid.Column="2" Text="{Binding Source}" Classes="dim" FontSize="12" />
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4">
+                      <Border Classes="chip" BorderBrush="{StaticResource GreenBrush}" IsVisible="{Binding Native}" Margin="0"><TextBlock Text="native" FontSize="10.5" Foreground="{StaticResource GreenBrush}" /></Border>
+                      <Border Classes="chip" BorderBrush="{StaticResource MagentaBrush}" IsVisible="{Binding Voice}" Margin="0"><TextBlock Text="voice" FontSize="10.5" Foreground="{StaticResource MagentaBrush}" /></Border>
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Border Margin="0,12,0,0" Padding="12,10" CornerRadius="10" Background="#0A1020" BorderBrush="{Binding TagBrush}" BorderThickness="1">
+              <StackPanel Spacing="4">
+                <TextBlock Text="{Binding TagTitle}" Foreground="{Binding TagBrush}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding TagHint}" Classes="dim" FontSize="12" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Border>
+
+        <!-- STP + IGMP -->
+        <Border Grid.Column="1" Classes="card" Margin="7,0,0,0">
+          <StackPanel>
+            <TextBlock Text="SPANNING TREE" Classes="section" Margin="0,0,0,6" />
+            <TextBlock Text="{Binding StpRoot, StringFormat='Root bridge: {0}'}" TextWrapping="Wrap" FontWeight="SemiBold" />
+            <ItemsControl ItemsSource="{Binding Stp}" Margin="0,8,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:StpRow">
+                  <Grid ColumnDefinitions="*,70,60,Auto" Margin="0,3">
+                    <StackPanel>
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding Bridge}" Classes="caption mono" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding Protocol}" VerticalAlignment="Center" FontSize="12" />
+                    <TextBlock Grid.Column="2" Text="{Binding Cost, StringFormat='cost {0}'}" VerticalAlignment="Center" FontSize="12" Classes="dim" />
+                    <TextBlock Grid.Column="3" Text="{Binding RootText}" Foreground="{StaticResource GreenBrush}" FontWeight="Bold" VerticalAlignment="Center" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="IGMP QUERIER" Classes="section" />
+            <TextBlock Text="{Binding IgmpQuerier}" Foreground="{Binding IgmpBrush}" TextWrapping="Wrap" FontWeight="SemiBold" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- DHCP -->
+      <Border Classes="card">
+        <StackPanel>
+          <Grid ColumnDefinitions="Auto,*">
+            <TextBlock Text="DHCP SERVERS" Classes="section" Margin="0,0,0,8" />
+            <Border Grid.Column="1" Classes="chip" Background="#33FF3D5A" BorderBrush="{StaticResource RedBrush}" IsVisible="{Binding HasRogueDhcp}" HorizontalAlignment="Left" Margin="10,0,0,4" VerticalAlignment="Center">
+              <TextBlock Text="ROGUE DHCP SERVER DETECTED" Foreground="{StaticResource RedBrush}" FontSize="11" FontWeight="Bold" />
+            </Border>
+          </Grid>
+          <ItemsControl ItemsSource="{Binding DhcpServers}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:DhcpRow">
+                <Border Background="{Binding Background}" CornerRadius="8" Padding="8,6" Margin="0,2">
+                  <Grid ColumnDefinitions="2*,130,150,120,120,*,80,100">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1" Text="{Binding Server}" Classes="mono" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding Mac}" Classes="mono" Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Text="{Binding Offer, StringFormat='offer {0}'}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="4" Text="{Binding Router, StringFormat='gw {0}'}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="5" Text="{Binding Dns, StringFormat='dns {0}'}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="6" Text="{Binding Lease}" FontSize="12" VerticalAlignment="Center" Classes="dim" />
+                    <TextBlock Grid.Column="7" Text="{Binding Status}" Foreground="{Binding Brush}" FontWeight="Bold" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="*,*">
+        <!-- WAN -->
+        <Border Classes="card glow" Margin="0,0,7,0">
+          <StackPanel>
+            <TextBlock Text="WAN / INTERNET EDGE" Classes="section" Margin="0,0,0,8" />
+            <TextBlock Text="No gateway audit yet (UPnP IGD / NAT-PMP / PCP)." Classes="dim" IsVisible="{Binding !HasWan}" />
+            <StackPanel IsVisible="{Binding HasWan}" Spacing="8">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="External IP" Classes="caption" />
+                  <SelectableTextBlock Text="{Binding WanIp}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource CyanBrush}" />
+                </StackPanel>
+                <Border Grid.Column="1" Classes="chip" BorderBrush="{Binding WanStatusBrush}" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding WanStatus}" Foreground="{Binding WanStatusBrush}" FontWeight="SemiBold" />
+                </Border>
+              </Grid>
+              <Grid ColumnDefinitions="*,*,*">
+                <StackPanel><TextBlock Text="Uptime" Classes="caption" /><TextBlock Text="{Binding WanUptime}" FontWeight="SemiBold" /></StackPanel>
+                <StackPanel Grid.Column="1"><TextBlock Text="Method" Classes="caption" /><TextBlock Text="{Binding WanMethod}" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel>
+                <StackPanel Grid.Column="2"><TextBlock Text="Gateway" Classes="caption" /><TextBlock Text="{Binding WanModel}" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel>
+              </Grid>
+              <TextBlock Text="PORT MAPPINGS" Classes="section" Margin="0,8,0,4" />
+              <Grid ColumnDefinitions="60,70,140,70,*,60">
+                <TextBlock Text="Proto" Classes="caption" /><TextBlock Grid.Column="1" Text="External" Classes="caption" />
+                <TextBlock Grid.Column="2" Text="Internal" Classes="caption" /><TextBlock Grid.Column="3" Text="Port" Classes="caption" />
+                <TextBlock Grid.Column="4" Text="Description" Classes="caption" /><TextBlock Grid.Column="5" Text="On" Classes="caption" />
+              </Grid>
+              <ItemsControl ItemsSource="{Binding PortMappings}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="m:PortMapping">
+                    <Grid ColumnDefinitions="60,70,140,70,*,60" Margin="0,2">
+                      <TextBlock Text="{Binding Protocol}" FontSize="12" />
+                      <TextBlock Grid.Column="1" Text="{Binding ExternalPort}" FontWeight="SemiBold" Foreground="{StaticResource AmberBrush}" />
+                      <TextBlock Grid.Column="2" Text="{Binding InternalClient}" Classes="mono" />
+                      <TextBlock Grid.Column="3" Text="{Binding InternalPort}" />
+                      <TextBlock Grid.Column="4" Text="{Binding Description}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                      <CheckBox Grid.Column="5" IsChecked="{Binding Enabled, Mode=OneWay}" IsEnabled="False" MinHeight="0" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Internet path -->
+        <Border Grid.Column="1" Classes="card" Margin="7,0,0,0">
+          <StackPanel>
+            <TextBlock Text="INTERNET PATH" Classes="section" Margin="0,0,0,8" />
+            <TextBlock Text="No traceroute yet." Classes="dim" IsVisible="{Binding !InternetPath.Count}" />
+            <ItemsControl ItemsSource="{Binding InternetPath}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:HopRow">
+                  <Grid ColumnDefinitions="30,140,*,150" Margin="0,3">
+                    <Border Width="22" Height="22" CornerRadius="11" Background="#1A00E5FF" BorderBrush="#5500E5FF" BorderThickness="1">
+                      <TextBlock Text="{Binding Ttl}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="{Binding Address}" Classes="mono" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding Host}" Classes="dim" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <Border Width="{Binding Bar}" MaxWidth="80" Height="5" CornerRadius="3" Background="{Binding Brush}" />
+                      <TextBlock Text="{Binding Rtt}" Foreground="{Binding Brush}" FontSize="12" FontWeight="SemiBold" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

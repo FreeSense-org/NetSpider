@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NetSpider.Core\NetSpider.Core.csproj" />
+    <ProjectReference Include="..\..\src\NetSpider.Capture\NetSpider.Capture.csproj" />
+    <ProjectReference Include="..\..\src\NetSpider.Discovery\NetSpider.Discovery.csproj" />
+    <ProjectReference Include="..\..\src\NetSpider.Diagnostics\NetSpider.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\src\NetSpider.Fingerprint\NetSpider.Fingerprint.csproj" />
+    <ProjectReference Include="..\..\src\NetSpider.Export\NetSpider.Export.csproj" />
+    <ProjectReference Include="..\..\src\NetSpider.Wifi\NetSpider.Wifi.csproj" />
+    <!-- App logic: updater, shell (window clamping, capture janitor, Npcap URL, startup task XML, settings import/export) -->
+    <ProjectReference Include="..\..\src\NetSpider.App\NetSpider.App.csproj" />
+  </ItemGroup>
+</Project>

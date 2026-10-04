@@ -1,0 +1,39 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <!--
+    Machine-wide MSI for IT deployment (Intune / GPO / SCCM). One MSI per architecture.
+
+      dotnet build installer/msi/NetSpider.Msi.wixproj -c Release -p:Platform=x64 ^
+        -p:PublishDir=<app publish folder> -p:ProductVersion=1.2.3 -o <outdir>
+
+    Platform: x64 | arm64 | x86 (all build fine on an x64 machine). build/release.ps1 drives this per RID.
+    MSI installs never self-update (the app sees InstallMode=msi); IT upgrades by deploying the newer MSI (MajorUpgrade).
+  -->
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <OutputName>FreeSense-NetSpider</OutputName>
+    <Platform Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">x64</Platform>
+    <!-- Root Directory.Build.props sets net10.0 etc. for the C# projects; irrelevant here. -->
+    <TargetFramework></TargetFramework>
+    <BrandDir>$(MSBuildThisFileDirectory)..\..\src\NetSpider.App\Assets\Brand\</BrandDir>
+    <ProductIcon Condition="'$(ProductIcon)' == '' and Exists('$(BrandDir)netspider.ico')">$(BrandDir)netspider.ico</ProductIcon>
+    <BannerBmp Condition="'$(BannerBmp)' == '' and Exists('$(BrandDir)msi-banner.bmp')">$(BrandDir)msi-banner.bmp</BannerBmp>
+    <DialogBmp Condition="'$(DialogBmp)' == '' and Exists('$(BrandDir)msi-dialog.bmp')">$(BrandDir)msi-dialog.bmp</DialogBmp>
+    <!-- MSI ProductVersion must be numeric major.minor.build: strip any pre-release/build suffix (0.1.0-beta.1 -> 0.1.0). -->
+    <ProductVersion Condition="'$(ProductVersion)' == ''">0.1.0</ProductVersion>
+    <MsiProductVersion>$([System.Text.RegularExpressions.Regex]::Match('$(ProductVersion)', '^\d+(\.\d+){0,2}').Value)</MsiProductVersion>
+    <!-- ICE61: same-version upgrades are allowed on purpose (pre-releases of one version share its MSI version).
+         ICE43/ICE57: false positives for a per-machine package (ALLUSERS=1 makes ProgramMenuFolder per-machine, so the
+         Start menu shortcut is correctly keyed on the per-machine exe).
+         ICE60: versioned non-font files without a language (runtime/native files from the publish folder); harmless. -->
+    <SuppressIces>ICE43;ICE57;ICE60;ICE61</SuppressIces>
+    <DefineConstants>PublishDir=$(PublishDir);ProductVersion=$(MsiProductVersion);ProductIcon=$(ProductIcon);BannerBmp=$(BannerBmp);DialogBmp=$(DialogBmp)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" />
+    <PackageReference Include="WixToolset.Util.wixext" />
+  </ItemGroup>
+  <Target Name="NetSpiderValidateMsiInputs" BeforeTargets="Build;CoreBuild">
+    <Error Condition="'$(PublishDir)' == '' or !Exists('$(PublishDir)NetSpider.exe')"
+           Text="PublishDir must point at a 'dotnet publish src/NetSpider.App -r win-xxx' output folder (with trailing slash). Got '$(PublishDir)'." />
+  </Target>
+</Project>

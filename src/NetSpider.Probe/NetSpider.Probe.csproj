@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Headless probe agent (second vantage point). Cross-platform: Windows x64/ARM64/x86 and Linux x64/ARM64 (Raspberry Pi).
+       No Avalonia, no Npcap: only NetSpider.Core models plus the shared wire protocol files linked from Diagnostics. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>netspider-probe</AssemblyName>
+    <RootNamespace>NetSpider.Probe</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <ApplicationIcon>netspider.ico</ApplicationIcon>
+  </PropertyGroup>
+  <!-- Only when publishing: trimmed single file (all JSON is source-generated, so trimming is safe). -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <!-- IL2026 comes only from NetSpider.Core's SettingsStore (reflection JSON), which the agent never calls. -->
+    <NoWarn>$(NoWarn);IL2026</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\NetSpider.Diagnostics\Agents\AgentProtocol.cs" Link="Shared\AgentProtocol.cs" />
+    <Compile Include="..\NetSpider.Diagnostics\Agents\AgentWifiParsers.cs" Link="Shared\AgentWifiParsers.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NetSpider.Core\NetSpider.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="probe.example.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="README.md" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

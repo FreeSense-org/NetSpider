@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Dev tool: renders the brand SVGs in assets/brand into the committed app/installer assets.
+       Usage: see Program.cs (dotnet run, project tools/IconGen, variant a|b|c, optional sheet). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>NetSpider.Tools.IconGen</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Same versions Avalonia.Svg.Skia 11.3.0 pulls into the app. -->
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="Svg.Skia" />
+  </ItemGroup>
+</Project>

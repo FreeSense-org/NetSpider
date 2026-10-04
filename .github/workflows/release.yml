@@ -1,0 +1,171 @@
+name: Release
+
+# Release channel, step 1 of 2 (manual): Actions → Release → Run workflow (on main).
+#
+# main is protected (PRs only), so this workflow can't commit the release itself. It:
+#   1. computes the version: ChangelogTool next-version (last vX.Y.Z tag + [Unreleased]), or the `version` input
+#   2. runs `ChangelogTool release --version X.Y.Z`: [Unreleased] → "## [X.Y.Z] - <today>"
+#   3. commits "chore(release): vX.Y.Z" on branch release/vX.Y.Z and opens a PR (body = the release notes)
+#   4. starts ci.yml on that branch (`gh workflow run`): a PR opened with GITHUB_TOKEN doesn't trigger pull_request
+#      workflows, and the dispatch run reports the required checks (Build and test, Changelog, PR title) on the
+#      branch's head commit
+#   5. enables auto-merge (squash, subject "chore(release): vX.Y.Z")
+# Step 2 is publish-release.yml: once the PR is merged it tags vX.Y.Z and publishes it.
+#
+# Special case: a "## [X.Y.Z]" section that is already written but never tagged (the seeded 1.0.0) is published
+# directly (tag on main's HEAD + publish.yml), without a PR.
+#
+# Repository settings (lead engineer): "Allow GitHub Actions to create and approve pull requests" and "Allow
+# auto-merge". Optional secret RELEASE_PR_TOKEN (fine-grained PAT or GitHub App token with contents, pull-requests
+# and actions write): when set, the PR is created and merged with it, so pull_request CI and the push to main fire
+# normally. Without it everything still works; see publish-release.yml for why it also runs on a schedule.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version override (X.Y.Z). Leave empty to compute it from CHANGELOG.md.'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: release-pr
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  prepare:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # push the release branch (or the tag)
+      pull-requests: write  # gh pr create / gh pr merge --auto
+      actions: write        # gh workflow run ci.yml
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      version: ${{ steps.plan.outputs.version }}
+      sha: ${{ steps.plan.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PR_TOKEN || github.token }}
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Plan
+        id: plan
+        shell: bash
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then echo "::error::Run the Release workflow on main (this run is on $GITHUB_REF)."; exit 1; fi
+          dotnet build tools/ChangelogTool -c Release -nologo -v q
+          cl() { dotnet run --project tools/ChangelogTool -c Release --no-build -- "$@"; }
+          cl validate CHANGELOG.md
+          cl info | tee "$RUNNER_TEMP/info.txt"
+          get() { grep "^$1=" "$RUNNER_TEMP/info.txt" | cut -d= -f2; }
+          echo "sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+
+          v="${VERSION_INPUT#v}"
+          if [ -n "$v" ]; then
+            if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "::error::'$v' is not a release version (X.Y.Z)."; exit 1; fi
+            if cl notes --version "$v" > /dev/null 2>&1; then mode="publish"; else mode="pr"; fi
+            echo "::notice::Version override: $v (computed: $(get next_version))."
+          else
+            case "$(get release_kind)" in
+              new)     mode="pr";      v=$(get next_version) ;;
+              pending) mode="publish"; v=$(get next_version) ;;
+              *)
+                echo "mode=none" >> "$GITHUB_OUTPUT"
+                { echo "### Nothing to release"; echo "[Unreleased] in CHANGELOG.md is empty and every written release is tagged."; } >> "$GITHUB_STEP_SUMMARY"
+                echo "::notice::Nothing to release: [Unreleased] is empty."
+                exit 0 ;;
+            esac
+          fi
+          if git rev-parse -q --verify "refs/tags/v$v" > /dev/null; then echo "::error::v$v is already tagged (released)."; exit 1; fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Release v$v ($mode)"
+
+      - name: Open the release PR
+        if: steps.plan.outputs.mode == 'pr'
+        shell: bash
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+          GH_TOKEN: ${{ secrets.RELEASE_PR_TOKEN || github.token }}
+        run: |
+          cl() { dotnet run --project tools/ChangelogTool -c Release --no-build -- "$@"; }
+          branch="release/v$VERSION"
+          title="chore(release): v$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$branch"
+          cl release --version "$VERSION"
+          cl validate CHANGELOG.md
+          cl notes --version "$VERSION" --out "$RUNNER_TEMP/notes.md"
+          git add CHANGELOG.md
+          git commit -m "$title"
+          git push --force origin "$branch"
+
+          {
+            echo "Release **v$VERSION**: moves \`[Unreleased]\` in CHANGELOG.md into \`## [$VERSION] - $(date -u +%F)\`."
+            echo "When this PR is merged, *Publish release* tags \`v$VERSION\` and publishes the installers and the update feed."
+            echo
+            echo "## Release notes"
+            echo
+            cat "$RUNNER_TEMP/notes.md"
+          } > "$RUNNER_TEMP/body.md"
+
+          existing=$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+            pr="$existing"
+          else
+            gh pr create --base main --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+            pr=$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number')
+          fi
+
+          # Checks: pull_request events from GITHUB_TOKEN don't start workflows, so run CI on the branch explicitly.
+          gh workflow run ci.yml --ref "$branch"
+
+          if ! gh pr merge "$pr" --squash --auto --subject "$title"; then
+            echo "::warning::Couldn't enable auto-merge (is 'Allow auto-merge' on?). Merge PR #$pr with 'Squash and merge' once the checks pass."
+          fi
+          {
+            echo "### Release PR for v$VERSION: #$pr"
+            echo
+            cat "$RUNNER_TEMP/notes.md"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Tag the written release
+        if: steps.plan.outputs.mode == 'publish'
+        shell: bash
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          # The section ## [VERSION] is already on main (e.g. the seeded 1.0.0): no PR needed, tag and publish it.
+          git tag "v$VERSION" "$GITHUB_SHA"
+          git push origin "refs/tags/v$VERSION"
+          echo "### Publishing the written section v$VERSION" >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish release
+    needs: prepare
+    if: needs.prepare.outputs.mode == 'publish'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+      channel: release
+      ref: ${{ needs.prepare.outputs.sha }}

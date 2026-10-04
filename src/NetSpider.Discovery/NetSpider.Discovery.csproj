@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="SharpPcap" />
+    <PackageReference Include="PacketDotNet" />
+    <PackageReference Include="Lextm.SharpSnmpLib" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NetSpider.Core\NetSpider.Core.csproj" />
+    <ProjectReference Include="..\NetSpider.Capture\NetSpider.Capture.csproj" />
+    <ProjectReference Include="..\NetSpider.Fingerprint\NetSpider.Fingerprint.csproj" />
+  </ItemGroup>
+</Project>

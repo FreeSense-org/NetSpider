@@ -1,0 +1,129 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NetSpider.App.ViewModels"
+             xmlns:c="using:NetSpider.App.Controls"
+             x:Class="NetSpider.App.Views.InternetView"
+             x:DataType="vm:InternetViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="18,14,22,18" Spacing="14">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock Text="Internet" Classes="h1" />
+          <TextBlock Text="Continuous ping to your own targets — online / degraded / offline, latency, loss and outage history." Classes="caption" />
+        </StackPanel>
+        <ToggleSwitch Grid.Column="1" IsChecked="{Binding Enabled}" OnContent="Monitoring on" OffContent="Monitoring off" VerticalAlignment="Center"
+                      IsEnabled="{Binding Available}" />
+      </Grid>
+
+      <!-- status strip -->
+      <Border Classes="card glow">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+          <Ellipse Width="16" Height="16" Fill="{Binding StateBrush}" VerticalAlignment="Center" Margin="2,0,14,0" />
+          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <TextBlock Text="{Binding StateText}" FontSize="24" FontWeight="SemiBold" Foreground="{Binding StateBrush}" />
+            <TextBlock Text="{Binding StateDetail}" Classes="dim" TextWrapping="Wrap" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Margin="24,0" VerticalAlignment="Center">
+            <TextBlock Text="UPTIME" Classes="section" />
+            <TextBlock Text="{Binding Uptime}" FontSize="20" FontWeight="SemiBold" />
+          </StackPanel>
+          <StackPanel Grid.Column="3" VerticalAlignment="Center">
+            <TextBlock Text="BEST RTT" Classes="section" />
+            <TextBlock Text="{Binding BestLatency}" FontSize="20" FontWeight="SemiBold" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- per-target cards -->
+      <ItemsControl ItemsSource="{Binding Targets}" IsVisible="{Binding Enabled}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:InternetTargetRow">
+            <Border Classes="card" Margin="0,0,0,12">
+              <Grid RowDefinitions="Auto,Auto">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+                  <StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Ellipse Width="10" Height="10" Fill="{Binding StateBrush}" VerticalAlignment="Center" />
+                      <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding State}" Foreground="{Binding StateBrush}" FontSize="12.5" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Address}" Classes="caption mono" Margin="18,2,0,0" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Margin="18,0" MinWidth="80"><TextBlock Text="LAST" Classes="caption" /><TextBlock Text="{Binding Last}" FontWeight="SemiBold" FontSize="15" /></StackPanel>
+                  <StackPanel Grid.Column="2" Margin="18,0" MinWidth="80"><TextBlock Text="AVG" Classes="caption" /><TextBlock Text="{Binding Avg}" FontWeight="SemiBold" FontSize="15" /></StackPanel>
+                  <StackPanel Grid.Column="3" Margin="18,0" MinWidth="80"><TextBlock Text="JITTER" Classes="caption" /><TextBlock Text="{Binding Jitter}" FontWeight="SemiBold" FontSize="15" /></StackPanel>
+                  <StackPanel Grid.Column="4" Margin="18,0,4,0" MinWidth="70"><TextBlock Text="LOSS" Classes="caption" /><TextBlock Text="{Binding Loss}" FontWeight="SemiBold" FontSize="15" /></StackPanel>
+                </Grid>
+                <c:TimeSeriesChart Grid.Row="1" Height="130" Margin="0,10,0,0" Series="{Binding Series}" Stacked="False" Unit="ms" Seconds="300" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Border Classes="card" IsVisible="{Binding ShowEmpty}">
+        <StackPanel Spacing="6">
+          <TextBlock Text="Internet monitoring is disabled" FontSize="16" FontWeight="SemiBold" />
+          <TextBlock Classes="dim" TextWrapping="Wrap"
+                     Text="Turn on the switch above to ping your targets every few seconds. NetSpider then shows online/degraded/offline status in the top bar, raises an alert when the internet goes down or comes back, and keeps an outage history. Configure targets below." />
+        </StackPanel>
+      </Border>
+
+      <!-- outages -->
+      <Border Classes="card" IsVisible="{Binding Enabled}">
+        <StackPanel Spacing="6">
+          <TextBlock Text="OUTAGES" Classes="section" />
+          <TextBlock Text="No outages recorded this session." Classes="dim" IsVisible="{Binding !HasOutages}" />
+          <ItemsControl ItemsSource="{Binding Outages}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:OutageRow">
+                <Grid ColumnDefinitions="200,140,*" Margin="0,2">
+                  <TextBlock Text="{Binding Start}" Classes="mono" />
+                  <TextBlock Grid.Column="1" Text="{Binding End}" Classes="mono" />
+                  <TextBlock Grid.Column="2" Text="{Binding Duration}" FontWeight="SemiBold" Foreground="{StaticResource RedBrush}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- targets editor -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="PING TARGETS" Classes="section" VerticalAlignment="Center" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="Interval (s)" Classes="dim" VerticalAlignment="Center" />
+              <NumericUpDown Value="{Binding Interval}" Minimum="1" Maximum="300" FormatString="0" Width="90" />
+              <Button Classes="ghost" Command="{Binding ResetDefaultsCommand}" Content="Reset to defaults" />
+              <Button Classes="accent" Command="{Binding ApplyTargetsCommand}" Content="Save targets" />
+            </StackPanel>
+          </Grid>
+          <ItemsControl ItemsSource="{Binding EditTargets}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:EditableTarget">
+                <Grid ColumnDefinitions="Auto,220,*,Auto" Margin="0,3">
+                  <CheckBox IsChecked="{Binding Enabled}" VerticalAlignment="Center" ToolTip.Tip="Include this target" />
+                  <TextBox Grid.Column="1" Text="{Binding Name}" Watermark="Name" Margin="6,0" />
+                  <TextBox Grid.Column="2" Text="{Binding Host}" Watermark="IP address or host name" Classes="mono" Margin="0,0,6,0" />
+                  <Button Grid.Column="3" Classes="icon" ToolTip.Tip="Remove target"
+                          Command="{Binding $parent[UserControl].((vm:InternetViewModel)DataContext).RemoveTargetCommand}" CommandParameter="{Binding}">
+                    <Path Classes="icon" Data="{StaticResource IconClose}" Width="11" />
+                  </Button>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Grid ColumnDefinitions="Auto,220,*,Auto" Margin="0,4,0,0">
+            <TextBlock Text="+" FontSize="18" Classes="dim" VerticalAlignment="Center" Margin="6,0,10,0" />
+            <TextBox Grid.Column="1" Text="{Binding NewName}" Watermark="Name (optional)" Margin="6,0" />
+            <TextBox Grid.Column="2" Text="{Binding NewHost}" Watermark="e.g. 1.1.1.1, google.com, your ISP gateway" Classes="mono" Margin="0,0,6,0" />
+            <Button Grid.Column="3" Classes="ghost" Command="{Binding AddTargetCommand}" Content="Add target" />
+          </Grid>
+          <TextBlock Text="{Binding Message}" Classes="dim" IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

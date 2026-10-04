@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- CHANGELOG.md tooling shared by CI, build/release.ps1 and build/prepare-release.ps1 (same parser as the app).
+       Usage: dotnet run (project tools/ChangelogTool) followed by a command: validate, check-pr, next-version, prerelease-version, release, notes, info. See Program.cs. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>NetSpider.Tools.ChangelogTool</RootNamespace>
+    <AssemblyName>changelog</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NetSpider.Core\NetSpider.Core.csproj" />
+  </ItemGroup>
+</Project>

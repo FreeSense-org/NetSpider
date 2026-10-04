@@ -1,0 +1,228 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NetSpider.App.ViewModels"
+             xmlns:c="using:NetSpider.App.Controls"
+             x:Class="NetSpider.App.Views.InspectorView"
+             x:DataType="vm:InspectorViewModel">
+  <UserControl.Styles>
+    <Style Selector="Button.act">
+      <Setter Property="Padding" Value="10,5" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Margin" Value="0,0,6,6" />
+      <Setter Property="Background" Value="#1200E5FF" />
+      <Setter Property="BorderBrush" Value="#4400E5FF" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Expander">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Margin" Value="0,6,0,0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrushNeon}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid>
+    <!-- nothing selected -->
+    <StackPanel IsVisible="{Binding !HasDevice}" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Margin="30">
+      <Path Data="{StaticResource IconSearch}" Stroke="{StaticResource TextFaintBrush}" StrokeThickness="1.4" Width="46" Height="46" Stretch="Uniform" />
+      <TextBlock Text="Select a device" Classes="h2" HorizontalAlignment="Center" />
+      <TextBlock Text="Click a node in the web, a row in the device list or the source of an alert." Classes="dim" TextWrapping="Wrap" TextAlignment="Center" FontSize="12.5" />
+    </StackPanel>
+
+    <ScrollViewer IsVisible="{Binding HasDevice}" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="18,16,22,24">
+        <!-- header -->
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Border Width="74" Height="74" CornerRadius="37" BoxShadow="0 0 26 0 #5500E5FF">
+            <c:DeviceBadge Width="74" Height="74" DeviceType="{Binding DeviceType}" LogoPath="{Binding LogoPath}" RingColor="{Binding RingColor}" />
+          </Border>
+          <StackPanel Grid.Column="1" Margin="14,2,0,0" Spacing="2" VerticalAlignment="Center">
+            <TextBox Text="{Binding EditName}" FontSize="17" FontWeight="SemiBold" Background="Transparent" BorderThickness="0" Padding="0"
+                     ToolTip.Tip="{Binding RenameTooltip}" x:Name="NameBox" />
+            <TextBlock Text="{Binding BrandModel}" Classes="dim" TextWrapping="Wrap" FontSize="12.5" />
+            <TextBlock Text="{Binding TypeText}" Foreground="{StaticResource CyanBrush}" FontSize="12" />
+          </StackPanel>
+        </Grid>
+        <Grid ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+          <StackPanel Spacing="4">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="Identification confidence" Classes="caption" />
+              <TextBlock Grid.Column="1" Text="{Binding ConfidenceText}" Classes="caption" />
+            </Grid>
+            <ProgressBar Value="{Binding Confidence}" Maximum="100" Height="5" MinHeight="5" />
+          </StackPanel>
+          <Border Grid.Column="1" Classes="chip" Margin="12,0,0,0" BorderBrush="{Binding StateBrush}" VerticalAlignment="Center">
+            <TextBlock Text="{Binding StateText}" Foreground="{Binding StateBrush}" FontSize="11.5" FontWeight="SemiBold" />
+          </Border>
+        </Grid>
+        <TextBlock Text="{Binding SeenText}" Classes="caption" Margin="0,6,0,0" />
+
+        <!-- flags -->
+        <ItemsControl ItemsSource="{Binding Flags}" Margin="0,10,0,0" IsVisible="{Binding HasFlags}">
+          <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:ChipItem">
+              <Border Classes="chip" Background="{Binding Background}" BorderBrush="{Binding BorderBrush}">
+                <TextBlock Text="{Binding Text}" Foreground="{Binding Foreground}" FontSize="11" FontWeight="SemiBold" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- actions -->
+        <TextBlock Text="ACTIONS" Classes="section" />
+        <WrapPanel>
+          <Button Classes="act" Command="{Binding OpenWebUiCommand}" Content="Open Web UI" ToolTip.Tip="{Binding WebTooltip}" ToolTip.ShowOnDisabled="True" />
+          <Button Classes="act" Command="{Binding SshCommand}" Content="SSH" ToolTip.Tip="Windows Terminal → ssh" />
+          <Button Classes="act" Command="{Binding RdpCommand}" Content="RDP" ToolTip.Tip="mstsc /v:" />
+          <Button Classes="act" Command="{Binding WakeOnLanCommand}" Content="Wake-on-LAN" ToolTip.Tip="{Binding WolTooltip}" ToolTip.ShowOnDisabled="True" />
+          <Button Classes="act" Command="{Binding MtrCommand}" Content="Live MTR" ToolTip.Tip="{Binding MtrTooltip}" ToolTip.ShowOnDisabled="True" />
+          <Button Classes="act" Command="{Binding ReprobeCommand}" Content="Deep re-probe" ToolTip.Tip="{Binding ReprobeTooltip}" ToolTip.ShowOnDisabled="True" />
+          <Button Classes="act" Command="{Binding CopyMacCommand}" Content="Copy MAC" />
+          <Button Classes="act" Command="{Binding CopyIpCommand}" Content="Copy IP" />
+        </WrapPanel>
+
+        <!-- addresses -->
+        <TextBlock Text="ADDRESSES" Classes="section" />
+        <ItemsControl ItemsSource="{Binding Addresses}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:KeyValueRow">
+              <Grid ColumnDefinitions="96,*" Margin="0,2">
+                <TextBlock Text="{Binding Key}" Classes="caption" VerticalAlignment="Top" Margin="0,1,0,0" />
+                <SelectableTextBlock Grid.Column="1" Text="{Binding Value}" Foreground="{Binding ValueBrush}" Classes="mono" FontSize="12" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- latency -->
+        <TextBlock Text="LATENCY" Classes="section" />
+        <c:Sparkline Height="96" L2="{Binding L2Series}" L3="{Binding L3Series}" />
+        <ItemsControl ItemsSource="{Binding LatencyRows}" Margin="0,6,0,0">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:KeyValueRow">
+              <Grid ColumnDefinitions="64,*" Margin="0,1">
+                <TextBlock Text="{Binding Key}" Classes="caption" />
+                <TextBlock Grid.Column="1" Text="{Binding Value}" Foreground="{Binding ValueBrush}" FontSize="11.5" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- latency to -->
+        <TextBlock Text="LATENCY TO…  (DEVICE ↔ DEVICE)" Classes="section" />
+        <Border Classes="card" Padding="12">
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="*,Auto">
+              <ComboBox ItemsSource="{Binding Targets}" SelectedItem="{Binding SelectedTarget}" HorizontalAlignment="Stretch" FontSize="12" />
+              <Button Grid.Column="1" Classes="accent" Margin="8,0,0,0" Command="{Binding MeasureCommand}" Content="Measure"
+                      ToolTip.Tip="{Binding MeasureTooltip}" ToolTip.ShowOnDisabled="True" />
+            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="{Binding PairResult}" FontSize="26" FontWeight="Bold" Foreground="{Binding PairBrush}" />
+              <TextBlock Text="{Binding PairDetail}" Classes="dim" FontSize="11.5" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="250" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- network -->
+        <TextBlock Text="NETWORK" Classes="section" />
+        <ItemsControl ItemsSource="{Binding Network}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:KeyValueRow">
+              <Grid ColumnDefinitions="96,*" Margin="0,2">
+                <TextBlock Text="{Binding Key}" Classes="caption" />
+                <TextBlock Grid.Column="1" Text="{Binding Value}" Foreground="{Binding ValueBrush}" FontSize="12" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- ports -->
+        <Expander Header="Ports" IsExpanded="True" IsVisible="{Binding HasPorts}">
+          <ItemsControl ItemsSource="{Binding Ports}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:PortRow">
+                <Grid ColumnDefinitions="56,62,*" Margin="0,2">
+                  <TextBlock Text="{Binding Port}" FontWeight="SemiBold" Classes="mono" />
+                  <TextBlock Grid.Column="1" Text="{Binding State}" Foreground="{Binding StateBrush}" FontSize="12" />
+                  <StackPanel Grid.Column="2">
+                    <TextBlock Text="{Binding Service}" FontSize="12" />
+                    <TextBlock Text="{Binding Banner}" Classes="caption" TextWrapping="Wrap" IsVisible="{Binding Banner, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                  </StackPanel>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Expander>
+
+        <Expander Header="Services" IsVisible="{Binding HasServices}">
+          <ItemsControl ItemsSource="{Binding Services}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:KeyValueRow">
+                <StackPanel Margin="0,2">
+                  <TextBlock Text="{Binding Key}" Foreground="{StaticResource CyanBrush}" FontSize="11.5" />
+                  <TextBlock Text="{Binding Value}" FontSize="12" TextWrapping="Wrap" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Expander>
+
+        <Expander Header="TLS certificates" IsVisible="{Binding HasCerts}">
+          <ItemsControl ItemsSource="{Binding Certificates}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:CertRow">
+                <StackPanel Margin="0,4" Spacing="1">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding Port}" Classes="mono" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Subject}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding State}" Foreground="{Binding StateBrush}" FontSize="11.5" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding Issuer, StringFormat='issuer: {0}'}" Classes="caption" />
+                  <TextBlock Text="{Binding Validity}" Classes="caption" />
+                  <TextBlock Text="{Binding Sans, StringFormat='SAN: {0}'}" Classes="caption" TextWrapping="Wrap" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Expander>
+
+        <Expander Header="Properties (SNMP / printer / host)" IsVisible="{Binding HasProperties}">
+          <ItemsControl ItemsSource="{Binding Properties}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:KeyValueRow">
+                <Grid ColumnDefinitions="130,*" Margin="0,1">
+                  <TextBlock Text="{Binding Key}" Classes="caption" />
+                  <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12" TextWrapping="Wrap" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Expander>
+
+        <Expander Header="Evidence" IsExpanded="False">
+          <ItemsControl ItemsSource="{Binding Evidence}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:EvidenceRow">
+                <Grid ColumnDefinitions="58,*,56" Margin="0,3">
+                  <TextBlock Text="{Binding Source}" Foreground="{StaticResource MagentaBrush}" FontSize="11.5" FontWeight="SemiBold" />
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Text="{Binding Field}" Classes="caption" />
+                    <TextBlock Text="{Binding Value}" FontSize="12" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="2" HorizontalAlignment="Right" Spacing="3">
+                    <TextBlock Text="{Binding ConfidenceText}" FontSize="11" HorizontalAlignment="Right" Foreground="{Binding ConfidenceBrush}" />
+                    <Border Width="50" Height="3" Background="#1E2B47" CornerRadius="2" HorizontalAlignment="Right">
+                      <Border Width="{Binding ConfidenceWidth}" Background="{Binding ConfidenceBrush}" CornerRadius="2" HorizontalAlignment="Left" />
+                    </Border>
+                  </StackPanel>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Expander>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

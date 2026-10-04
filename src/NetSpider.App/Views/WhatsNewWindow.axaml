@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NetSpider.App.ViewModels"
+        xmlns:c="using:NetSpider.App.Controls"
+        x:Class="NetSpider.App.Views.WhatsNewWindow"
+        x:DataType="vm:WhatsNewWindowViewModel"
+        Width="660" Height="700" MinWidth="520" MinHeight="420"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" CanResize="True"
+        Background="#0D1424">
+  <DockPanel Margin="24,22,24,20">
+
+    <!-- header: logo, title, version line, colored counts -->
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="0,0,0,18">
+      <Border Width="64" Height="64" CornerRadius="16" Background="#1400E5FF" BorderBrush="#6600E5FF" BorderThickness="1"
+              BoxShadow="0 0 22 0 #4400E5FF" VerticalAlignment="Top" ClipToBounds="True">
+        <Panel>
+          <Image Source="{Binding Logo}" IsVisible="{Binding HasLogo}" Stretch="Uniform" Margin="6" />
+          <Path Data="{StaticResource IconSparkles}" Stroke="{StaticResource AccentGradient}" StrokeThickness="1.7" IsVisible="{Binding !HasLogo}"
+                StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform" Margin="14" />
+        </Panel>
+      </Border>
+      <StackPanel Grid.Column="1" Margin="16,0,0,0" Spacing="5" VerticalAlignment="Center">
+        <TextBlock Text="{Binding Title}" Classes="h1" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding Subtitle}" Classes="dim" FontSize="13" TextWrapping="Wrap" />
+        <c:ChangelogCounts Releases="{Binding Releases}" FontSize="12.5" FontWeight="SemiBold" Margin="0,2,0,0" />
+      </StackPanel>
+    </Grid>
+
+    <!-- footer -->
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,16,0,0">
+      <Button Classes="link" Content="See the full changelog" Command="{Binding OpenFullChangelogCommand}" VerticalAlignment="Center"
+              ToolTip.Tip="Every version with its changes (About → Changelog)" />
+      <Button Grid.Column="1" Classes="accent" Content="Got it" Command="{Binding DismissCommand}" MinWidth="120"
+              HorizontalContentAlignment="Center" IsDefault="True" IsCancel="True" />
+    </Grid>
+
+    <!-- body -->
+    <Border Classes="card" Padding="0">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <c:ChangelogView Releases="{Binding Releases}" ShowReleaseHeaders="{Binding ShowReleaseHeaders}" CurrentVersion="{Binding CurrentVersion}" Margin="18,16,20,16" />
+      </ScrollViewer>
+    </Border>
+  </DockPanel>
+</Window>

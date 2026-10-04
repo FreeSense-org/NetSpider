@@ -1,0 +1,238 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NetSpider.App.ViewModels"
+             xmlns:c="using:NetSpider.App.Controls"
+             x:Class="NetSpider.App.Views.PathView"
+             x:DataType="vm:PathViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="18,14,22,18" Spacing="14">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock Text="Path Doctor" Classes="h1" />
+          <TextBlock Text="Every hop from this PC to the internet, probed continuously — where exactly does it break?" Classes="caption" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <TextBlock Text="{Binding BuiltText}" Classes="caption" VerticalAlignment="Center" />
+          <Button Classes="accent" Command="{Binding RebuildCommand}" IsEnabled="{Binding CanRebuild}"
+                  ToolTip.Tip="Recompute the hop chain from topology + traceroute">
+            <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconRefresh}" Width="13" /><TextBlock Text="Rebuild path" /></StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+
+      <!-- verdict -->
+      <Border Classes="card glow" IsVisible="{Binding HasPath}">
+        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+          <Ellipse Width="16" Height="16" Fill="{Binding VerdictBrush}" VerticalAlignment="Top" Margin="2,9,14,0" />
+          <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+            <TextBlock Text="{Binding Verdict}" FontSize="21" FontWeight="SemiBold" Foreground="{Binding VerdictBrush}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding VerdictDetail}" Classes="dim" TextWrapping="Wrap" />
+          </StackPanel>
+          <Border Grid.Column="2" Classes="badge" Background="#1A00E5FF" BorderBrush="#5500E5FF" VerticalAlignment="Top" Margin="16,6,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Classes="icon" Data="{StaticResource IconWifi}" Stroke="{StaticResource CyanBrush}" Width="13" Height="13" IsVisible="{Binding IsWifi}" />
+              <Path Classes="icon" Data="{StaticResource IconCable}" Stroke="{StaticResource CyanBrush}" Width="13" Height="13" IsVisible="{Binding !IsWifi}" />
+              <TextBlock Text="{Binding Medium}" Foreground="{StaticResource CyanBrush}" />
+            </StackPanel>
+          </Border>
+          <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" IsVisible="{Binding HasIncident}" Margin="0,12,0,0" Padding="12,8"
+                  CornerRadius="10" Background="#1AFF3D5A" BorderBrush="#66FF3D5A" BorderThickness="1">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <Ellipse Classes="pulse" Width="9" Height="9" Fill="{StaticResource RedBrush}" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Margin="10,0" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12.5">
+                <Run Text="Active incident: " FontWeight="SemiBold" Foreground="#FFC9D1" /><Run Text="{Binding IncidentText}" />
+              </TextBlock>
+              <Button Grid.Column="2" Classes="ghost" Padding="10,4" FontSize="12" Command="{Binding OpenIncidentsCommand}" Content="View incident →" />
+            </Grid>
+          </Border>
+        </Grid>
+      </Border>
+
+      <!-- empty state -->
+      <Border Classes="card" IsVisible="{Binding !HasPath}">
+        <StackPanel Spacing="6">
+          <TextBlock Text="{Binding EmptyTitle}" FontSize="16" FontWeight="SemiBold" />
+          <TextBlock Text="{Binding EmptyText}" Classes="dim" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+
+      <!-- hop chain -->
+      <Border Classes="card" IsVisible="{Binding HasPath}" Padding="16,12,16,16">
+        <StackPanel Spacing="10">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="HOP CHAIN" Classes="section" Margin="0" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" Text="Click a hop to focus its timeline · the red link marks where the fault is" Classes="caption" VerticalAlignment="Center" />
+          </Grid>
+          <c:PathChainControl Hops="{Binding Hops}" SelectedIndex="{Binding SelectedHop}" />
+        </StackPanel>
+      </Border>
+
+      <!-- timeline -->
+      <Border Classes="card" IsVisible="{Binding HasPath}" Padding="16,12,16,12">
+        <StackPanel Spacing="4">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding ChartTitle}" Classes="section" Margin="0" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Classes="ghost" Padding="10,3" FontSize="12" Content="Show all hops" Command="{Binding ClearSelectionCommand}" />
+          </Grid>
+          <c:TimeSeriesChart Height="230" Series="{Binding Series}" Stacked="False" Unit="ms" Seconds="120" />
+        </StackPanel>
+      </Border>
+
+      <!-- hop details -->
+      <Border Classes="card" IsVisible="{Binding HasPath}">
+        <StackPanel>
+          <TextBlock Text="HOP DETAILS" Classes="section" Margin="0,0,0,8" />
+          <Grid ColumnDefinitions="34,1.3*,170,118,86,92,76,76,72,58,44,46,1.6*" Margin="8,0,8,4">
+            <TextBlock Text="#" Classes="th" />
+            <TextBlock Grid.Column="1" Text="Hop" Classes="th" />
+            <TextBlock Grid.Column="2" Text="Role" Classes="th" />
+            <TextBlock Grid.Column="3" Text="IP" Classes="th" />
+            <TextBlock Grid.Column="4" Text="Probe" Classes="th" />
+            <TextBlock Grid.Column="5" Text="Health" Classes="th" />
+            <TextBlock Grid.Column="6" Text="RTT" Classes="th" />
+            <TextBlock Grid.Column="7" Text="Added" Classes="th" />
+            <TextBlock Grid.Column="8" Text="Jitter" Classes="th" />
+            <TextBlock Grid.Column="9" Text="Loss" Classes="th" />
+            <TextBlock Grid.Column="10" Text="ARP" Classes="th" />
+            <TextBlock Grid.Column="11" Text="ICMP" Classes="th" />
+            <TextBlock Grid.Column="12" Text="Note" Classes="th" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Rows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:PathHopRow">
+                <Border Background="{Binding RowBackground}" CornerRadius="8" Padding="8,5">
+                  <Grid ColumnDefinitions="34,1.3*,170,118,86,92,76,76,72,58,44,46,1.6*">
+                    <TextBlock Text="{Binding Index}" Classes="dim" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip.Tip="{Binding Name}" />
+                    <TextBlock Grid.Column="2" Text="{Binding Role}" FontSize="12" Classes="dim" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <TextBlock Grid.Column="3" Text="{Binding Ip}" Classes="mono" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="4" Text="{Binding Probe}" FontSize="12" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <Ellipse Width="8" Height="8" Fill="{Binding HealthBrush}" />
+                      <TextBlock Text="{Binding Health}" Foreground="{Binding HealthBrush}" FontSize="12" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="6" Text="{Binding Rtt}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="7" Text="{Binding Added}" Foreground="{StaticResource MagentaBrush}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="8" Text="{Binding Jitter}" FontSize="12" Classes="dim" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="9" Text="{Binding Loss}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="10" Text="{Binding Arp}" Foreground="{Binding ArpBrush}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="11" Text="{Binding Icmp}" Foreground="{Binding IcmpBrush}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="12" Text="{Binding Note}" FontSize="12" Classes="dim" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding Note}" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="3*,2*">
+        <!-- dual-interface self-test -->
+        <Border Classes="card" Margin="0,0,7,0" IsVisible="{Binding Dual.Visible}" VerticalAlignment="Top">
+          <StackPanel Spacing="8">
+            <StackPanel>
+              <TextBlock Text="DUAL-INTERFACE TEST" Classes="section" Margin="0" />
+              <TextBlock Text="This PC's wired and Wi-Fi adapters probe the gateway, each other and the internet — LAN ↔ Wi-Fi from both sides." Classes="caption" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding Dual.HasMatrix}" Spacing="10">
+              <Grid ColumnDefinitions="170,*,*,*" RowDefinitions="Auto,Auto,Auto">
+                <TextBlock Grid.Column="1" Text="Gateway" Classes="th" Margin="4,0,0,6" />
+                <TextBlock Grid.Column="2" Text="Other adapter (crossover)" Classes="th" Margin="4,0,0,6" />
+                <TextBlock Grid.Column="3" Text="Internet (1.1.1.1)" Classes="th" Margin="4,0,0,6" />
+
+                <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Path Classes="icon" Data="{StaticResource IconCable}" Stroke="{StaticResource CyanBrush}" Width="13" Height="13" />
+                    <TextBlock Text="Wired" FontWeight="SemiBold" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding Dual.WiredIp}" Classes="caption mono" />
+                </StackPanel>
+                <Border Grid.Row="1" Grid.Column="1" Margin="4" Padding="10,7" CornerRadius="9" Background="{Binding Dual.WiredGateway.Background}" BorderBrush="{Binding Dual.WiredGateway.Brush}" BorderThickness="1">
+                  <StackPanel><TextBlock Text="{Binding Dual.WiredGateway.Value}" Foreground="{Binding Dual.WiredGateway.Brush}" FontWeight="SemiBold" /><TextBlock Text="{Binding Dual.WiredGateway.Sub}" Classes="caption" TextTrimming="CharacterEllipsis" /></StackPanel>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="2" Margin="4" Padding="10,7" CornerRadius="9" Background="{Binding Dual.WiredCross.Background}" BorderBrush="{Binding Dual.WiredCross.Brush}" BorderThickness="1">
+                  <StackPanel><TextBlock Text="{Binding Dual.WiredCross.Value}" Foreground="{Binding Dual.WiredCross.Brush}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding Dual.WiredCross.Sub}" Classes="caption" TextTrimming="CharacterEllipsis" /></StackPanel>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="3" Margin="4" Padding="10,7" CornerRadius="9" Background="{Binding Dual.WiredInternet.Background}" BorderBrush="{Binding Dual.WiredInternet.Brush}" BorderThickness="1">
+                  <StackPanel><TextBlock Text="{Binding Dual.WiredInternet.Value}" Foreground="{Binding Dual.WiredInternet.Brush}" FontWeight="SemiBold" /><TextBlock Text="{Binding Dual.WiredInternet.Sub}" Classes="caption" TextTrimming="CharacterEllipsis" /></StackPanel>
+                </Border>
+
+                <StackPanel Grid.Row="2" VerticalAlignment="Center" Margin="0,0,8,0">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Path Classes="icon" Data="{StaticResource IconWifi}" Stroke="{StaticResource CyanBrush}" Width="13" Height="13" />
+                    <TextBlock Text="Wi-Fi" FontWeight="SemiBold" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding Dual.WifiIp}" Classes="caption mono" />
+                </StackPanel>
+                <Border Grid.Row="2" Grid.Column="1" Margin="4" Padding="10,7" CornerRadius="9" Background="{Binding Dual.WifiGateway.Background}" BorderBrush="{Binding Dual.WifiGateway.Brush}" BorderThickness="1">
+                  <StackPanel><TextBlock Text="{Binding Dual.WifiGateway.Value}" Foreground="{Binding Dual.WifiGateway.Brush}" FontWeight="SemiBold" /><TextBlock Text="{Binding Dual.WifiGateway.Sub}" Classes="caption" TextTrimming="CharacterEllipsis" /></StackPanel>
+                </Border>
+                <Border Grid.Row="2" Grid.Column="2" Margin="4" Padding="10,7" CornerRadius="9" Background="{Binding Dual.WifiCross.Background}" BorderBrush="{Binding Dual.WifiCross.Brush}" BorderThickness="1">
+                  <StackPanel><TextBlock Text="{Binding Dual.WifiCross.Value}" Foreground="{Binding Dual.WifiCross.Brush}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding Dual.WifiCross.Sub}" Classes="caption" TextTrimming="CharacterEllipsis" /></StackPanel>
+                </Border>
+                <Border Grid.Row="2" Grid.Column="3" Margin="4" Padding="10,7" CornerRadius="9" Background="{Binding Dual.WifiInternet.Background}" BorderBrush="{Binding Dual.WifiInternet.Brush}" BorderThickness="1">
+                  <StackPanel><TextBlock Text="{Binding Dual.WifiInternet.Value}" Foreground="{Binding Dual.WifiInternet.Brush}" FontWeight="SemiBold" /><TextBlock Text="{Binding Dual.WifiInternet.Sub}" Classes="caption" TextTrimming="CharacterEllipsis" /></StackPanel>
+                </Border>
+              </Grid>
+              <Border Padding="12,8" CornerRadius="10" Background="#0A1020" BorderBrush="{Binding Dual.VerdictBrush}" BorderThickness="1">
+                <TextBlock Text="{Binding Dual.Verdict}" Foreground="{Binding Dual.VerdictBrush}" TextWrapping="Wrap" FontWeight="SemiBold" FontSize="12.5" />
+              </Border>
+            </StackPanel>
+            <Border IsVisible="{Binding !Dual.HasMatrix}" Padding="12,10" CornerRadius="10" Background="#0A1020" BorderBrush="{StaticResource BorderBrushNeon}" BorderThickness="1">
+              <TextBlock Text="Connect both a LAN cable and Wi-Fi on this PC to test LAN↔Wi-Fi from both sides." Classes="dim" TextWrapping="Wrap" />
+            </Border>
+          </StackPanel>
+        </Border>
+
+        <!-- probe agents (summary) -->
+        <Border Grid.Column="1" Classes="card" Margin="7,0,0,0" VerticalAlignment="Top">
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel>
+                <TextBlock Text="PROBE AGENTS" Classes="section" Margin="0" />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Ellipse Width="7" Height="7" Fill="{Binding Agents.HubBrush}" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding Agents.HubStatus}" Classes="caption" />
+                </StackPanel>
+              </StackPanel>
+              <Button Grid.Column="1" Classes="ghost" Padding="10,3" FontSize="12" Content="Manage…" Command="{Binding OpenSettingsCommand}" VerticalAlignment="Top" />
+            </Grid>
+            <TextBlock Text="No remote agents yet. Run NetSpider.Probe on a second PC, laptop or Raspberry Pi for a second vantage point (Settings → Probe agents)."
+                       Classes="dim" TextWrapping="Wrap" FontSize="12.5" IsVisible="{Binding !Agents.HasRemote}" />
+            <ItemsControl ItemsSource="{Binding Agents.Remote}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:AgentRow">
+                  <Border Padding="10,7" Margin="0,0,0,6" CornerRadius="9" Background="#0A1020">
+                    <StackPanel Spacing="4">
+                      <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Ellipse Width="8" Height="8" Fill="{Binding StateBrush}" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0">
+                          <TextBlock Text="{Binding Hostname}" FontWeight="SemiBold" />
+                          <TextBlock Text="{Binding Ip}" Classes="caption mono" VerticalAlignment="Center" />
+                          <TextBlock Text="{Binding Medium}" Classes="caption" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="{Binding LastSeen}" Classes="caption" VerticalAlignment="Center" />
+                      </Grid>
+                      <ItemsControl ItemsSource="{Binding Targets}" Margin="16,0,0,0">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:AgentTargetRow">
+                            <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,14,0">
+                              <TextBlock Text="{Binding Target}" Classes="caption" />
+                              <TextBlock Text="{Binding Value}" Foreground="{Binding Brush}" FontSize="11" FontWeight="SemiBold" />
+                            </StackPanel>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="{Binding Agents.BuiltInText}" Classes="caption" TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

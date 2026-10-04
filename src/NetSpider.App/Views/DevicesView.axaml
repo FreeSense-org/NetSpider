@@ -1,0 +1,93 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NetSpider.App.ViewModels"
+             xmlns:c="using:NetSpider.App.Controls"
+             x:Class="NetSpider.App.Views.DevicesView"
+             x:DataType="vm:DevicesViewModel">
+  <DockPanel Margin="18,14,18,14">
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,12">
+      <StackPanel VerticalAlignment="Center">
+        <TextBlock Text="Devices" Classes="h1" />
+        <TextBlock Text="{Binding Summary}" Classes="caption" />
+      </StackPanel>
+      <TextBox Grid.Column="2" Width="320" Text="{Binding SearchText}" Watermark="Filter by name, IP, MAC, vendor, type…" VerticalAlignment="Center">
+        <TextBox.InnerLeftContent>
+          <Path Classes="icon" Data="{StaticResource IconSearch}" Stroke="{StaticResource TextDimBrush}" Width="13" Margin="8,0,0,0" />
+        </TextBox.InnerLeftContent>
+      </TextBox>
+    </Grid>
+
+    <Border Classes="card" Padding="0" ClipToBounds="True">
+      <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" IsReadOnly="True" CanUserSortColumns="True"
+                CanUserReorderColumns="True" CanUserResizeColumns="True" SelectionMode="Single" RowHeight="40" HeadersVisibility="Column" HorizontalScrollBarVisibility="Auto">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="" Width="52" CanUserSort="False">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:DeviceRow">
+                <c:DeviceBadge Width="30" Height="30" DeviceType="{Binding Type}" LogoPath="{Binding LogoPath}" RingColor="{Binding RingColor}" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Name" Width="2*" MinWidth="200" SortMemberPath="Name">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:DeviceRow">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="4,0">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                  <Border IsVisible="{Binding IsNew}" Background="{StaticResource GreenBrush}" CornerRadius="6" Padding="5,0">
+                    <TextBlock Text="NEW" FontSize="9.5" FontWeight="Bold" Foreground="#070B14" />
+                  </Border>
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="Type" Binding="{Binding TypeText}" Width="130" />
+          <DataGridTextColumn Header="Brand / model" Binding="{Binding BrandModel}" Width="1.6*" MinWidth="170" />
+          <DataGridTemplateColumn Header="IP" Width="130" SortMemberPath="IpSort">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:DeviceRow">
+                <TextBlock Text="{Binding Ip}" Classes="mono" Foreground="#7FEFFF" VerticalAlignment="Center" Margin="8,0" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="MAC" Width="150" SortMemberPath="Mac">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:DeviceRow">
+                <TextBlock Text="{Binding Mac}" Classes="mono" Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center" Margin="8,0" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="Vendor" Binding="{Binding Vendor}" Width="1.2*" MinWidth="140" />
+          <DataGridTemplateColumn Header="L2 ms" Width="92" SortMemberPath="L2">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:DeviceRow">
+                <TextBlock Text="{Binding L2Text}" Foreground="{Binding L2Brush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="L3 ms" Width="92" SortMemberPath="L3">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:DeviceRow">
+                <TextBlock Text="{Binding L3Text}" Foreground="{Binding L3Brush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="Loss" Binding="{Binding LossText}" Width="80" SortMemberPath="Loss" />
+          <DataGridTextColumn Header="Open ports" Binding="{Binding OpenPorts}" Width="1.2*" MinWidth="130" />
+          <DataGridTextColumn Header="VLAN" Binding="{Binding Vlan}" Width="96" />
+          <DataGridTextColumn Header="First seen" Binding="{Binding FirstSeen, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Width="150" />
+          <DataGridTextColumn Header="Last seen" Binding="{Binding LastSeenText}" Width="100" SortMemberPath="LastSeen" />
+          <DataGridTemplateColumn Header="State" Width="96" SortMemberPath="State">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate x:DataType="vm:DeviceRow">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="8,0">
+                  <Ellipse Width="7" Height="7" Fill="{Binding StateBrush}" />
+                  <TextBlock Text="{Binding State}" FontSize="12" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+    </Border>
+  </DockPanel>
+</UserControl>

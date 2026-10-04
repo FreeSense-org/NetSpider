@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NetSpider.App/NetSpider.App.csproj" />
+    <Project Path="src/NetSpider.Capture/NetSpider.Capture.csproj" />
+    <Project Path="src/NetSpider.Core/NetSpider.Core.csproj" />
+    <Project Path="src/NetSpider.Diagnostics/NetSpider.Diagnostics.csproj" />
+    <Project Path="src/NetSpider.Discovery/NetSpider.Discovery.csproj" />
+    <Project Path="src/NetSpider.Export/NetSpider.Export.csproj" />
+    <Project Path="src/NetSpider.Fingerprint/NetSpider.Fingerprint.csproj" />
+    <Project Path="src/NetSpider.Probe/NetSpider.Probe.csproj" />
+    <Project Path="src/NetSpider.Wifi/NetSpider.Wifi.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/ChangelogTool/ChangelogTool.csproj" />
+    <Project Path="tools/IconGen/IconGen.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NetSpider.Tests.Integration/NetSpider.Tests.Integration.csproj" />
+    <Project Path="tests/NetSpider.Tests.Unit/NetSpider.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

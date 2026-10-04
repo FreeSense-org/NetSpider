@@ -1,0 +1,145 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NetSpider.App.ViewModels"
+        xmlns:c="using:NetSpider.App.Controls"
+        x:Class="NetSpider.App.Views.UpdateWindow"
+        x:DataType="vm:UpdateWindowViewModel"
+        Width="680" Height="640" MinWidth="560" MinHeight="420"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" CanResize="True"
+        Background="#0D1424">
+  <DockPanel Margin="24,22,24,20">
+
+    <!-- header: logo, heading, current → new version, channel, size -->
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="0,0,0,16">
+      <Border Width="64" Height="64" CornerRadius="16" Background="#1400E5FF" BorderBrush="#6600E5FF" BorderThickness="1"
+              BoxShadow="0 0 22 0 #4400E5FF" VerticalAlignment="Top" ClipToBounds="True">
+        <Panel>
+          <Image Source="{Binding Logo}" IsVisible="{Binding HasLogo}" Stretch="Uniform" Margin="6" />
+          <Path Data="{StaticResource IconSpider}" Stroke="{StaticResource AccentGradient}" StrokeThickness="1.7" IsVisible="{Binding !HasLogo}"
+                StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform" Margin="12" />
+        </Panel>
+      </Border>
+      <StackPanel Grid.Column="1" Margin="16,0,0,0" Spacing="8" VerticalAlignment="Center">
+        <TextBlock Text="{Binding Heading}" Classes="h1" TextWrapping="Wrap" />
+        <WrapPanel>
+          <Border Classes="pill" Margin="0,0,6,4" ToolTip.Tip="Installed version">
+            <TextBlock Text="{Binding CurrentVersion}" FontSize="12.5" FontWeight="SemiBold" />
+          </Border>
+          <StackPanel Orientation="Horizontal" IsVisible="{Binding HasUpdate}">
+            <Path Data="{StaticResource IconChevronRight}" Stroke="{StaticResource TextDimBrush}" StrokeThickness="1.6" Width="10" Height="10"
+                  Stretch="Uniform" VerticalAlignment="Center" Margin="2,0,8,4" />
+            <Border Classes="pill" Margin="0,0,6,4" Background="#22FFC23D" BorderBrush="#88FFC23D" ToolTip.Tip="New version">
+              <TextBlock Text="{Binding NewVersion}" FontSize="12.5" FontWeight="Bold" Foreground="{StaticResource AmberBrush}" />
+            </Border>
+          </StackPanel>
+          <Border Classes="pill" Margin="6,0,6,4" Background="Transparent" BorderBrush="{StaticResource BorderBrushNeon}">
+            <TextBlock Text="{Binding Channel}" FontSize="12" Classes="dim" />
+          </Border>
+          <Border Classes="pill" Margin="0,0,6,4" Background="Transparent" BorderBrush="{StaticResource BorderBrushNeon}" IsVisible="{Binding HasSize}">
+            <TextBlock Text="{Binding SizeText}" FontSize="12" Classes="dim" />
+          </Border>
+        </WrapPanel>
+      </StackPanel>
+    </Grid>
+
+    <!-- footer buttons -->
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,16,0,0">
+      <Button Classes="ghost" Content="Skip this version" Command="{Binding SkipCommand}" IsVisible="{Binding ShowSkip}"
+              ToolTip.Tip="Don't remind me about this version again (a manual check still shows it)" />
+      <Button Grid.Column="2" Classes="ghost" Content="{Binding CloseText}" Command="{Binding LaterCommand}" MinWidth="96"
+              HorizontalContentAlignment="Center" Margin="0,0,8,0" IsCancel="True" />
+      <Button Grid.Column="3" Classes="accent" Command="{Binding PrimaryCommand}" IsVisible="{Binding ShowPrimary}"
+              IsEnabled="{Binding CanPrimary}" MinWidth="160" HorizontalContentAlignment="Center" IsDefault="True">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Path Classes="icon" Data="{StaticResource IconExport}" Stroke="#B9F9FF" StrokeThickness="1.7" Width="13" Height="13" Stretch="Uniform" />
+          <TextBlock Text="{Binding PrimaryText}" FontWeight="SemiBold" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <StackPanel DockPanel.Dock="Bottom" Spacing="10">
+      <!-- download progress -->
+      <Border Classes="card" Padding="14,12" IsVisible="{Binding IsDownloading}">
+        <StackPanel Spacing="8">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="Downloading update…" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="1" Text="{Binding Service.ProgressText}" Classes="dim mono" />
+          </Grid>
+          <ProgressBar Value="{Binding Service.ProgressPercent}" Minimum="0" Maximum="100" Height="8" MinHeight="8" />
+        </StackPanel>
+      </Border>
+
+      <!-- ready -->
+      <Border Classes="banner info" Margin="0" IsVisible="{Binding IsReady}">
+        <Grid ColumnDefinitions="Auto,*">
+          <Path Classes="icon" Data="{StaticResource IconCheck}" Stroke="{StaticResource GreenBrush}" StrokeThickness="2" Width="18" Height="18" Stretch="Uniform" />
+          <TextBlock Grid.Column="1" Margin="12,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12.5"
+                     Text="Downloaded and verified. NetSpider closes, installs the update and starts again — it takes a few seconds." />
+        </Grid>
+      </Border>
+
+      <!-- MSI / portable / dev: manual download -->
+      <Border Classes="banner warn" Margin="0" IsVisible="{Binding ShowManualInfo}">
+        <Grid ColumnDefinitions="Auto,*">
+          <Path Classes="icon" Data="{StaticResource IconInfo}" Stroke="{StaticResource AmberBrush}" StrokeThickness="1.7" Width="18" Height="18" Stretch="Uniform" />
+          <TextBlock Grid.Column="1" Margin="12,0,0,0" Text="{Binding ManualInfo}" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="12.5" />
+        </Grid>
+      </Border>
+
+      <!-- error -->
+      <Border Classes="banner error" Margin="0" IsVisible="{Binding IsError}">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Path Classes="icon" Data="{StaticResource IconWarn}" Stroke="{StaticResource RedBrush}" StrokeThickness="1.7" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Top" Margin="0,2,0,0" />
+          <StackPanel Grid.Column="1" Margin="12,0" Spacing="2">
+            <TextBlock Text="Something went wrong" FontWeight="SemiBold" Foreground="#FFC9D1" />
+            <SelectableTextBlock Text="{Binding Service.ErrorMessage}" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextDimBrush}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Classes="danger" Content="Retry" Command="{Binding RetryCommand}" />
+            <Button Classes="ghost" Content="Open releases page" Command="{Binding OpenReleasesCommand}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </StackPanel>
+
+    <!-- body -->
+    <Panel>
+      <!-- checking -->
+      <StackPanel IsVisible="{Binding IsChecking}" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+        <ProgressBar IsIndeterminate="True" Width="260" Height="5" MinHeight="5" />
+        <TextBlock Text="Contacting the release feed…" Classes="dim" HorizontalAlignment="Center" />
+      </StackPanel>
+
+      <!-- up to date -->
+      <StackPanel IsVisible="{Binding IsUpToDate}" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12" MaxWidth="460">
+        <Border Width="56" Height="56" CornerRadius="28" Background="#1A3DFF8B" BorderBrush="#663DFF8B" BorderThickness="1" HorizontalAlignment="Center"
+                BoxShadow="0 0 22 0 #333DFF8B" IsVisible="{Binding CanCheck}">
+          <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource GreenBrush}" StrokeThickness="2.4" Stretch="Uniform" Margin="15" />
+        </Border>
+        <Border Width="56" Height="56" CornerRadius="28" Background="#1AFFC23D" BorderBrush="#66FFC23D" BorderThickness="1" HorizontalAlignment="Center"
+                IsVisible="{Binding !CanCheck}">
+          <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource AmberBrush}" StrokeThickness="1.8" Stretch="Uniform" Margin="13" />
+        </Border>
+        <TextBlock Text="{Binding UpToDateText}" TextWrapping="Wrap" TextAlignment="Center" Classes="dim" />
+        <Button Classes="link" Content="See all releases" HorizontalAlignment="Center" Command="{Binding OpenReleasesCommand}" />
+      </StackPanel>
+
+      <!-- release notes: by category (generated from CHANGELOG.md); plain markdown as a fallback -->
+      <Border Classes="card" Padding="0" IsVisible="{Binding HasUpdate}">
+        <DockPanel>
+          <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="16,14,16,6">
+            <TextBlock Text="WHAT'S NEW" Classes="section" Margin="0" VerticalAlignment="Center" />
+            <c:ChangelogCounts Grid.Column="1" Releases="{Binding NotesReleases}" IsVisible="{Binding HasStructuredNotes}"
+                               FontSize="12" FontWeight="SemiBold" Margin="12,0,0,0" VerticalAlignment="Center" />
+          </Grid>
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <Panel Margin="16,6,18,14">
+              <c:ChangelogView Releases="{Binding NotesReleases}" ShowReleaseHeaders="False" IsVisible="{Binding HasStructuredNotes}" />
+              <c:MarkdownView Markdown="{Binding Service.ReleaseNotes}" IsVisible="{Binding HasMarkdownNotes}" />
+            </Panel>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </Panel>
+  </DockPanel>
+</Window>

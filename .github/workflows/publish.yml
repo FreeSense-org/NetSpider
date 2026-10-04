@@ -1,0 +1,236 @@
+name: Publish
+
+# The workhorse: builds installers for win-x64 / win-arm64 / win-x86 and publishes them, plus the Velopack update feed,
+# as GitHub release v<version> of this repository. The built-in GITHUB_TOKEN is enough — no extra secrets.
+#
+# Called (workflow_call) by:
+#   prerelease.yml       every push to main with [Unreleased] entries → v<next>-pre.<n>, Pre-release channel only
+#   publish-release.yml  a merged release PR ("chore(release): vX.Y.Z") → vX.Y.Z, Release + Pre-release channels
+#   release.yml          an already-written but untagged changelog section (e.g. the first 1.0.0)
+# Release notes come from CHANGELOG.md (build/release.ps1 → ChangelogTool notes): the version's own section for a
+# release, [Unreleased] for a pre-release. The callers create and push the tag first; tags pushed with GITHUB_TOKEN
+# don't trigger workflows, which is why this workflow is called directly instead of being tag-triggered.
+#
+# Escape hatch (workflow_dispatch): re-publish an EXISTING tag, e.g. after a failed upload. Actions → Publish →
+# Run workflow → version 1.2.0 (ref defaults to the tag v1.2.0). This never creates tags or edits CHANGELOG.md.
+#
+# Optional: code signing secrets (see the commented signing step below).
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: SemVer version without "v" (e.g. 1.2.0 or 1.3.0-pre.4)
+        required: true
+        type: string
+      channel:
+        description: release | prerelease
+        required: true
+        type: string
+      ref:
+        description: Commit, tag or branch to build (default — the tag v<version>)
+        required: false
+        type: string
+        default: ''
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Existing version to (re-)publish, without "v" (e.g. 1.2.0 or 1.3.0-pre.4)'
+        required: true
+        type: string
+      channel:
+        description: Channel
+        required: true
+        type: choice
+        options: [release, prerelease]
+      ref:
+        description: 'Commit or tag to build (default: the tag v<version>, which must exist)'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  # Never publish the same version twice at once. Per version (not one global group): GitHub keeps only one pending
+  # run per group, so a global group could cancel a queued release behind a running pre-release. The callers use
+  # their own, different group names (sharing one with this workflow would deadlock).
+  group: publish-${{ inputs.version }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  RELEASES_REPO_URL: https://github.com/${{ github.repository }}
+
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      prerelease: ${{ steps.v.outputs.prerelease }}
+      ref: ${{ steps.v.outputs.ref }}
+    steps:
+      - id: v
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+          CHANNEL: ${{ inputs.channel }}
+          REF: ${{ inputs.ref }}
+        run: |
+          v="${VERSION#v}"
+          ch="$CHANNEL"
+          if [ "$ch" != "release" ] && [ "$ch" != "prerelease" ]; then echo "::error::channel must be release or prerelease"; exit 1; fi
+          if [ "$ch" = "release" ] && [[ "$v" == *-* ]]; then echo "::error::$v has a pre-release suffix; publish it to the prerelease channel"; exit 1; fi
+          if [ "$ch" = "prerelease" ] && [[ "$v" != *-* ]]; then echo "::error::$v is a release version; publish it to the release channel (it reaches pre-release users too)"; exit 1; fi
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then echo "::error::'$v' is not a SemVer version"; exit 1; fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          if [[ "$v" == *-* ]]; then echo "prerelease=true" >> "$GITHUB_OUTPUT"; else echo "prerelease=false" >> "$GITHUB_OUTPUT"; fi
+          ref="${REF:-v$v}"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "Publishing $v ($ch channel) from $ref"
+
+  test:
+    name: Test
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.ref }}
+          fetch-depth: 0 # MinVer
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet test NetworkScan.slnx -c Release --logger trx --results-directory TestResults
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: warn
+
+  build:
+    name: Build ${{ matrix.rid }}
+    needs: [version, test]
+    runs-on: windows-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        rid: [win-x64, win-arm64, win-x86]
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.ref }}
+          fetch-depth: 0 # MinVer + the git-log fallback for release notes need full history and tags
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # ---------------------------------------------------------------------------------------------------------------
+      # CODE SIGNING (disabled; builds are unsigned for now). To enable ONE of the options:
+      #
+      # A) Azure Trusted Signing (recommended):
+      #    1. Create a Trusted Signing account + certificate profile in Azure, and an app registration (OIDC federated
+      #       credential for this repo) with the "Trusted Signing Certificate Profile Signer" role.
+      #    2. Add secrets AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_SUBSCRIPTION_ID; add `id-token: write` to this job's
+      #       permissions.
+      #    3. Uncomment the two steps below and add `-AzureTrustedSignFile build/trusted-signing.json` to the
+      #       release.ps1 call. vpk then signs NetSpider.exe + all binaries, Update.exe and Setup.exe.
+      #       (MSI/probe signing with Trusted Signing: signtool /dlib Azure.CodeSigning.Dlib.dll /dmdf <metadata.json>.)
+      #
+      # - uses: azure/login@v2
+      #   with:
+      #     client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # - name: Trusted Signing metadata
+      #   shell: pwsh
+      #   run: |
+      #     @{ Endpoint = 'https://weu.codesigning.azure.net'; CodeSigningAccountName = 'freesense'; CertificateProfileName = 'netspider' } |
+      #       ConvertTo-Json | Set-Content build/trusted-signing.json
+      #
+      # B) Classic code-signing certificate (PFX) with signtool:
+      #    1. Store the base64 PFX as secret SIGNING_PFX_BASE64 and its password as SIGNING_PFX_PASSWORD.
+      #    2. Uncomment the step below and add `-SignParams $env:SIGN_PARAMS` to the release.ps1 call. vpk signs the app
+      #       and installers; release.ps1 signs the MSI and the Windows probe exes with the same parameters.
+      #
+      # - name: Import signing certificate
+      #   shell: pwsh
+      #   run: |
+      #     $pfx = Join-Path $env:RUNNER_TEMP 'signing.pfx'
+      #     [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String('${{ secrets.SIGNING_PFX_BASE64 }}'))
+      #     "SIGN_PARAMS=/fd SHA256 /td SHA256 /tr http://timestamp.digicert.com /f `"$pfx`" /p ${{ secrets.SIGNING_PFX_PASSWORD }}" >> $env:GITHUB_ENV
+      # ---------------------------------------------------------------------------------------------------------------
+
+      - name: Build release (${{ matrix.rid }})
+        shell: pwsh
+        env:
+          # Read-only use here: download the previous release of this channel so vpk can build delta packages.
+          RELEASES_TOKEN: ${{ github.token }}
+          CHANNEL: ${{ inputs.channel }}
+          RID: ${{ matrix.rid }}
+        # RELEASE-NOTES.md comes from CHANGELOG.md: release.ps1 runs ChangelogTool (notes --version X.Y.Z for a release,
+        # notes --unreleased for a pre-release), so the updater shows exactly the changelog section.
+        run: ./build/release.ps1 -Version $env:VERSION -Channel $env:CHANNEL -Rids $env:RID -SkipTests -Deltas always
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.rid }}
+          path: artifacts/${{ env.VERSION }}/
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish GitHub release
+    needs: [version, build]
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: artifacts/${{ env.VERSION }}
+          merge-multiple: true
+
+      - name: Checksums for the combined release
+        shell: pwsh
+        run: |
+          $art = "artifacts/$env:VERSION"
+          Get-ChildItem $art -File | Where-Object Extension -in '.exe', '.zip', '.msi', '.nupkg' | Sort-Object Name |
+            ForEach-Object { '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } |
+            Set-Content (Join-Path $art 'SHA256SUMS.txt') -Encoding utf8NoBOM
+          Get-ChildItem $art | Format-Table Name, Length -AutoSize
+
+      # vpk upload github (one call per channel, all into release v<version>, --merge, --publish on the last one,
+      # --pre for pre-releases), then gh release upload for the MSIs / probe zips / checksums, then the release body.
+      - name: Publish release
+        shell: pwsh
+        env:
+          RELEASES_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./build/upload-release.ps1 -Version $env:VERSION -ArtifactsDir "artifacts/$env:VERSION" -ReleasesRepoUrl $env:RELEASES_REPO_URL
+
+      - name: Summary
+        shell: pwsh
+        run: |
+          "### FreeSense NetSpider $env:VERSION published" >> $env:GITHUB_STEP_SUMMARY
+          "$env:RELEASES_REPO_URL/releases/tag/v$env:VERSION" >> $env:GITHUB_STEP_SUMMARY

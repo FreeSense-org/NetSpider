@@ -1,0 +1,43 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NetSpider.App.App"
+             Name="NetSpider"
+             RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Dark"
+                               Accent="#00E5FF"
+                               AltHigh="#070B14"
+                               AltLow="#070B14"
+                               AltMedium="#070B14"
+                               AltMediumHigh="#070B14"
+                               AltMediumLow="#070B14"
+                               BaseHigh="#E8F1FF"
+                               BaseLow="#1E2B47"
+                               BaseMedium="#8A9BB8"
+                               BaseMediumHigh="#B4C2DA"
+                               BaseMediumLow="#3A4A68"
+                               ChromeAltLow="#B4C2DA"
+                               ChromeBlackHigh="#000000"
+                               ChromeBlackLow="#B4C2DA"
+                               ChromeBlackMedium="#000000"
+                               ChromeBlackMediumLow="#000000"
+                               ChromeDisabledHigh="#1E2B47"
+                               ChromeDisabledLow="#8A9BB8"
+                               ChromeGray="#56657F"
+                               ChromeHigh="#56657F"
+                               ChromeLow="#0B1222"
+                               ChromeMedium="#0D1424"
+                               ChromeMediumLow="#101A2E"
+                               ChromeWhite="#FFFFFF"
+                               ListLow="#1400E5FF"
+                               ListMedium="#2600E5FF"
+                               RegionColor="#070B14"
+                               ErrorText="#FF3D5A" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+    <StyleInclude Source="avares://NetSpider/Theme/NeonTheme.axaml" />
+  </Application.Styles>
+</Application>

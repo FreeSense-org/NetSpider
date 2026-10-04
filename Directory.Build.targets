@@ -1,0 +1,12 @@
+<Project>
+  <!-- AssemblyInformationalVersion = "<semver>+<short commit>" (e.g. 1.2.3+abc1234); AppInfo.Commit parses the part
+       after '+'. The SDK appends the full SourceLink commit SHA by default; shorten it to 7 characters. -->
+  <Target Name="NetSpiderShortSourceRevision"
+          BeforeTargets="AddSourceRevisionToInformationalVersion"
+          DependsOnTargets="InitializeSourceControlInformation"
+          Condition="'$(SourceControlInformationFeatureSupported)' == 'true'">
+    <PropertyGroup Condition="'$(SourceRevisionId)' != '' and $(SourceRevisionId.Length) &gt; 7">
+      <SourceRevisionId>$(SourceRevisionId.Substring(0, 7))</SourceRevisionId>
+    </PropertyGroup>
+  </Target>
+</Project>

@@ -1,0 +1,292 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NetSpider.App.ViewModels"
+        xmlns:v="using:NetSpider.App.Views"
+        x:Class="NetSpider.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="avares://NetSpider/Assets/Brand/netspider.ico"
+        Title="{Binding WindowTitle}"
+        Width="1640" Height="1000" MinWidth="1100" MinHeight="680"
+        WindowStartupLocation="CenterScreen">
+
+  <!-- About (F1) -->
+  <Window.KeyBindings>
+    <KeyBinding Gesture="F1" Command="{Binding ShowAboutCommand}" />
+  </Window.KeyBindings>
+
+  <Grid ColumnDefinitions="228,*">
+
+    <!-- ================= left navigation ================= -->
+    <Border Grid.Column="0" Background="{StaticResource NavBrush}" BorderBrush="{StaticResource BorderBrushNeon}" BorderThickness="0,0,1,0">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="20,20,0,22" Spacing="10">
+          <Image Source="avares://NetSpider/Assets/Brand/logo-256.png" Width="38" Height="38"
+                 RenderOptions.BitmapInterpolationMode="HighQuality" />
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="NetSpider" FontSize="19" FontWeight="Bold" LetterSpacing="0.5" />
+            <Button Classes="link" Command="{Binding OpenFreeSenseCommand}" ToolTip.Tip="NetSpider is part of the FreeSense project — https://freesense.org">
+              <TextBlock Text="a FreeSense project" FontSize="10.5" Foreground="{StaticResource TextDimBrush}" />
+            </Button>
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Bottom" Margin="18,10,18,18" Spacing="6">
+          <Border Classes="pill" IsVisible="{Binding IsDemo}" HorizontalAlignment="Left" Background="#22FF2BD6" BorderBrush="#66FF2BD6">
+            <TextBlock Text="DEMO NETWORK" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource MagentaBrush}" LetterSpacing="1" />
+          </Border>
+          <TextBlock Text="{Binding ScanStage}" Classes="caption" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- About (separate from the page nav; opens a modal) -->
+        <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource BorderBrushNeon}" BorderThickness="0,1,0,0" Margin="14,6,14,0" Padding="0,6,0,0">
+          <Button Classes="navlink" Command="{Binding ShowAboutCommand}" HorizontalAlignment="Stretch" ToolTip.Tip="About NetSpider (F1)">
+            <Grid ColumnDefinitions="Auto,*">
+              <Path Classes="icon" Data="{StaticResource IconInfo}" Width="17" Height="17" Stretch="Uniform" StrokeThickness="1.6" />
+              <TextBlock Grid.Column="1" Text="About" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="13.5" />
+            </Grid>
+          </Button>
+        </Border>
+
+        <ListBox Classes="nav" ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:NavItem">
+              <Grid ColumnDefinitions="Auto,*,Auto" Background="Transparent" ToolTip.Tip="{Binding Tip}" ToolTip.Placement="Right">
+                <Path Classes="icon" Data="{Binding Icon}" Width="17" Height="17" />
+                <TextBlock Grid.Column="1" Text="{Binding Title}" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="13.5"
+                           Foreground="{Binding $parent[ContentPresenter].Foreground}" />
+                <Border Grid.Column="2" IsVisible="{Binding HasBadge}" Background="{StaticResource RedBrush}" CornerRadius="9"
+                        Padding="7,1" MinWidth="20" BoxShadow="0 0 10 0 #88FF3D5A">
+                  <TextBlock Text="{Binding Badge}" FontSize="10.5" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" />
+                </Border>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <!-- ================= main area ================= -->
+    <DockPanel Grid.Column="1">
+
+      <!-- top bar -->
+      <Border DockPanel.Dock="Top" Background="#0A1020" BorderBrush="{StaticResource BorderBrushNeon}" BorderThickness="0,0,0,1" Padding="14,10">
+        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+          <!-- adapter -->
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <ComboBox ItemsSource="{Binding Adapters}" SelectedItem="{Binding SelectedAdapter}" Width="230"
+                      PlaceholderText="No adapters (Npcap required)"
+                      ToolTip.Tip="Capture adapter (remembered between sessions)">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:AdapterItem">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Detail}" Classes="dim" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding VirtualTag}" Foreground="{StaticResource MagentaBrush}" FontSize="11" VerticalAlignment="Center" />
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Classes="icon" Command="{Binding RefreshAdaptersCommand}" ToolTip.Tip="Refresh adapters">
+              <Path Classes="icon" Data="M20,12 A8,8 0 1 1 17.7,6.3 M20,4 V8 H16" />
+            </Button>
+          </StackPanel>
+
+          <!-- actions -->
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="8,0" VerticalAlignment="Center">
+            <Button Classes="accent" Command="{Binding StartMonitoringCommand}" ToolTip.Tip="{Binding MonitorTooltip}" ToolTip.ShowOnDisabled="True">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconPlay}" Width="12" /><TextBlock Text="Monitor" /></StackPanel>
+            </Button>
+            <Button Classes="magenta" Command="{Binding FullScanCommand}" ToolTip.Tip="{Binding ScanTooltip}" ToolTip.ShowOnDisabled="True">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconScan}" Width="14" /><TextBlock Text="Full scan" /></StackPanel>
+            </Button>
+            <Button Classes="ghost" Command="{Binding StopCommand}" ToolTip.Tip="Stop monitoring and scanning">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconStop}" Width="11" /><TextBlock Text="Stop" /></StackPanel>
+            </Button>
+          </StackPanel>
+
+          <!-- progress + stage -->
+          <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="6,0" Spacing="3" IsVisible="{Binding IsScanning}">
+            <TextBlock Text="{Binding ScanStage}" FontSize="11.5" Classes="dim" TextTrimming="CharacterEllipsis" />
+            <ProgressBar Value="{Binding ScanProgress}" Minimum="0" Maximum="100" Height="5" MinHeight="5" />
+          </StackPanel>
+
+          <!-- live stats -->
+          <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Margin="4,0">
+            <!-- update available / ready (updater) -->
+            <Button Classes="pill stat update" Padding="10,3" Command="{Binding ShowUpdateCommand}" IsVisible="{Binding ShowUpdateChip}"
+                    ToolTip.Tip="{Binding UpdateChipTooltip}">
+              <TextBlock Text="{Binding UpdateChipText}" FontWeight="SemiBold" FontSize="12.5" Foreground="{StaticResource AmberBrush}" VerticalAlignment="Center" />
+            </Button>
+            <Button Classes="pill stat" Padding="10,3" Command="{Binding GoToInternetCommand}"
+                    ToolTip.Tip="Internet monitor (opt-in) — click for details and to configure ping targets">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Ellipse Width="8" Height="8" Fill="{Binding Internet.StateBrush}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Internet.ChipText}" FontWeight="SemiBold" FontSize="12.5" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="pill stat" Padding="10,3" Command="{Binding GoToPathCommand}" ToolTip.Tip="{Binding Path.ChipTooltip}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Ellipse Width="8" Height="8" Fill="{Binding Path.ChipBrush}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Path.ChipText}" FontWeight="SemiBold" FontSize="12.5" VerticalAlignment="Center" MaxWidth="190" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+            </Button>
+            <Border Classes="pill stat" ToolTip.Tip="Devices">
+              <StackPanel Orientation="Horizontal" Spacing="5"><TextBlock Text="{Binding DeviceCount}" FontWeight="Bold" /><TextBlock Text="devices" Classes="caption" VerticalAlignment="Center" /></StackPanel>
+            </Border>
+            <Border Classes="pill stat" ToolTip.Tip="Topology links" IsVisible="{Binding !CompactTopBar}">
+              <StackPanel Orientation="Horizontal" Spacing="5"><TextBlock Text="{Binding LinkCount}" FontWeight="Bold" /><TextBlock Text="links" Classes="caption" VerticalAlignment="Center" /></StackPanel>
+            </Border>
+            <Border Classes="pill stat" ToolTip.Tip="Packets per second on the capture adapter">
+              <StackPanel Orientation="Horizontal" Spacing="5"><TextBlock Text="{Binding Pps}" FontWeight="Bold" /><TextBlock Text="pps" Classes="caption" VerticalAlignment="Center" /></StackPanel>
+            </Border>
+            <Border Classes="pill stat" ToolTip.Tip="Broadcast share of all packets">
+              <StackPanel Orientation="Horizontal" Spacing="5"><TextBlock Text="{Binding BroadcastPct}" FontWeight="Bold" Foreground="{Binding BroadcastBrush}" /><TextBlock Text="bcast" Classes="caption" VerticalAlignment="Center" /></StackPanel>
+            </Border>
+            <Border Classes="pill stat" ToolTip.Tip="Packets dropped by the capture driver / pipeline" IsVisible="{Binding !CompactTopBar}">
+              <StackPanel Orientation="Horizontal" Spacing="5"><TextBlock Text="{Binding Dropped}" FontWeight="Bold" /><TextBlock Text="dropped" Classes="caption" VerticalAlignment="Center" /></StackPanel>
+            </Border>
+          </StackPanel>
+
+          <!-- export / demo / inspector -->
+          <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <DropDownButton Classes="ghost" ToolTip.Tip="Export inventory, reports and captures">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconExport}" Width="14" /><TextBlock Text="Export" /></StackPanel>
+              <DropDownButton.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                  <MenuItem Header="Topology image (.png)" Command="{Binding ExportGraphPngCommand}" />
+                  <Separator />
+                  <MenuItem Header="No exporters available in this build" IsEnabled="False" IsVisible="{Binding !HasExporters}" />
+                  <MenuItem ItemsSource="{Binding ExportItems}" Header="Exporters" IsVisible="{Binding HasExporters}">
+                    <MenuItem.ItemContainerTheme>
+                      <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:ExportItem">
+                        <Setter Property="Header" Value="{Binding Title}" />
+                        <Setter Property="Command" Value="{Binding ExportCommand}" />
+                      </ControlTheme>
+                    </MenuItem.ItemContainerTheme>
+                  </MenuItem>
+                </MenuFlyout>
+              </DropDownButton.Flyout>
+            </DropDownButton>
+            <ToggleButton Classes="demo" IsChecked="{Binding IsDemo}" Content="Demo network"
+                          ToolTip.Tip="Populate NetSpider with a simulated ~40-device home/office network" />
+
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- banners -->
+      <StackPanel DockPanel.Dock="Top">
+        <Border Classes="banner error" IsVisible="{Binding ShowNpcapBanner}">
+          <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+            <Path Classes="icon" Data="{StaticResource IconCritical}" Stroke="{StaticResource RedBrush}" Width="20" Height="20" />
+            <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+              <TextBlock Text="Npcap required" FontWeight="Bold" Foreground="#FFC9D1" />
+              <TextBlock Text="NetSpider captures and injects raw frames through Npcap. Install it with &quot;WinPcap API-compatible mode&quot;, then restart NetSpider. You can explore the demo network meanwhile."
+                         TextWrapping="Wrap" FontSize="12" Classes="dim" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <!-- guided install (download from npcap.com, verify signature, run elevated) -->
+              <Button Classes="accent" Command="{Binding InstallNpcapCommand}"
+                      ToolTip.Tip="Download the latest Npcap from npcap.com, verify its signature (Nmap Software LLC) and run the installer">
+                <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconExport}" Width="13" /><TextBlock Text="Install Npcap" /></StackPanel>
+              </Button>
+              <Button Classes="danger" Command="{Binding OpenNpcapDownloadCommand}" ToolTip.Tip="{Binding NpcapUrl}" Content="Download Npcap" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="12,8,0,0" Spacing="4"
+                        IsVisible="{Binding NpcapInstallText, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <ProgressBar Value="{Binding NpcapInstallProgress}" Maximum="100" Height="5" MinHeight="5" IsVisible="{Binding IsInstallingNpcap}" />
+              <TextBlock Text="{Binding NpcapInstallText}" FontSize="12" Classes="dim" TextWrapping="Wrap" />
+            </StackPanel>
+          </Grid>
+        </Border>
+        <!-- previous session crashed (CrashReporter) -->
+        <Border Classes="banner warn" IsVisible="{Binding ShowCrashBanner}">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <Path Classes="icon" Data="{StaticResource IconWarn}" Stroke="{StaticResource AmberBrush}" Width="18" Height="18" />
+            <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+              <TextBlock Text="NetSpider closed unexpectedly last time" FontWeight="Bold" />
+              <TextBlock Text="{Binding CrashBannerText}" FontSize="12" Classes="dim" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Button Classes="ghost" Command="{Binding OpenLogFolderCommand}" Content="Open log folder" ToolTip.Tip="Show the crash report in Explorer" />
+              <Button Classes="ghost" Command="{Binding DismissCrashCommand}" Content="Dismiss" />
+            </StackPanel>
+          </Grid>
+        </Border>
+        <Border Classes="banner warn" IsVisible="{Binding ShowAdminBanner}">
+          <Grid ColumnDefinitions="Auto,*">
+            <Path Classes="icon" Data="{StaticResource IconShield}" Stroke="{StaticResource AmberBrush}" Width="18" Height="18" />
+            <TextBlock Grid.Column="1" Margin="12,0" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12.5"
+                       Text="Not running as administrator — packet capture, ARP/NDP timing and injection may fail. Restart NetSpider with &quot;Run as administrator&quot; (release builds request it automatically)." />
+          </Grid>
+        </Border>
+        <Border Classes="banner error" IsVisible="{Binding HasError}">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <Path Classes="icon" Data="{StaticResource IconWarn}" Stroke="{StaticResource RedBrush}" Width="18" Height="18" />
+            <SelectableTextBlock Grid.Column="1" Margin="12,0" Text="{Binding ErrorMessage}" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="#FFC9D1" />
+            <Button Grid.Column="2" Classes="icon" Command="{Binding DismissErrorCommand}"><Path Classes="icon" Data="{StaticResource IconClose}" Width="12" /></Button>
+          </Grid>
+        </Border>
+        <Border Classes="banner info" IsVisible="{Binding HasInfo}">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <Path Classes="icon" Data="{StaticResource IconInfo}" Stroke="{StaticResource CyanBrush}" Width="18" Height="18" />
+            <TextBlock Grid.Column="1" Margin="12,0" Text="{Binding InfoMessage}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <Button Grid.Column="2" Classes="icon" Command="{Binding DismissInfoCommand}"><Path Classes="icon" Data="{StaticResource IconClose}" Width="12" /></Button>
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <!-- content + inspector -->
+      <Grid ColumnDefinitions="*,Auto">
+        <Panel Grid.Column="0">
+          <v:WebView DataContext="{Binding Web}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsWebPage}" />
+          <v:DevicesView DataContext="{Binding Devices}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsDevicesPage}" />
+          <v:AlertsView DataContext="{Binding Alerts}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsAlertsPage}" />
+          <v:TrafficView DataContext="{Binding Traffic}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsTrafficPage}" />
+          <v:WifiView DataContext="{Binding Wifi}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsWifiPage}" />
+          <v:SegmentsView DataContext="{Binding Segments}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSegmentsPage}" />
+          <v:HealthView DataContext="{Binding Health}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsHealthPage}" />
+          <v:InternetView DataContext="{Binding Internet}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsInternetPage}" />
+          <v:PathView DataContext="{Binding Path}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsPathPage}" />
+          <v:IncidentsView DataContext="{Binding Incidents}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsIncidentsPage}" />
+          <v:StormView DataContext="{Binding Storm}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsStormPage}" />
+          <v:SettingsView DataContext="{Binding Settings}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSettingsPage}" />
+
+          <!-- toasts -->
+          <ItemsControl ItemsSource="{Binding Toasts}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,18,18" Width="360" ZIndex="10">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ToastViewModel">
+                <Border Background="#F20D1526" BorderBrush="{Binding Accent}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,8,0,0"
+                        BoxShadow="0 10 30 0 #AA000000">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Path Classes="icon" Data="{Binding Icon}" Stroke="{Binding Accent}" Width="20" Height="20" VerticalAlignment="Top" />
+                    <StackPanel Grid.Column="1" Margin="12,0,6,0" Spacing="2">
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                      <TextBlock Text="{Binding Details}" Classes="dim" FontSize="12" TextWrapping="Wrap" MaxHeight="48" TextTrimming="CharacterEllipsis" />
+                      <Button Classes="ghost" Padding="8,2" FontSize="11.5" Margin="0,6,0,0" HorizontalAlignment="Left" Content="{Binding ShowText}"
+                              Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShowToastSourceCommand}" CommandParameter="{Binding}" />
+                    </StackPanel>
+                    <Button Grid.Column="2" Classes="icon" VerticalAlignment="Top"
+                            Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).DismissToastCommand}" CommandParameter="{Binding}">
+                      <Path Classes="icon" Data="{StaticResource IconClose}" Width="10" />
+                    </Button>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Panel>
+
+        <Border Grid.Column="1" Width="410" IsVisible="{Binding InspectorOpen}" Background="#0A1020"
+                BorderBrush="{StaticResource BorderBrushNeon}" BorderThickness="1,0,0,0">
+          <Panel>
+            <v:InspectorView DataContext="{Binding Inspector}" />
+            <Button Classes="icon" Command="{Binding ToggleInspectorCommand}" ToolTip.Tip="Hide inspector" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,8,0">
+              <Path Classes="icon" Data="{StaticResource IconChevronRight}" Width="12" />
+            </Button>
+          </Panel>
+        </Border>
+      </Grid>
+    </DockPanel>
+  </Grid>
+</Window>

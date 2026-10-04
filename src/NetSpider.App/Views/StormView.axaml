@@ -1,0 +1,305 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NetSpider.App.ViewModels"
+             xmlns:c="using:NetSpider.App.Controls"
+             x:Class="NetSpider.App.Views.StormView"
+             x:DataType="vm:StormViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="18,14,22,18" Spacing="14">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock Text="Storm Center" Classes="h1" />
+          <TextBlock Text="Broadcast, multicast and unknown-unicast floods — how bad, which protocol, who sends it and where it enters the network." Classes="caption" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+          <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Classes="ghost" Command="{Binding RecordNowCommand}" IsEnabled="{Binding Available}"
+                    ToolTip.Tip="Instantly save the packets already captured (the rolling buffer of the last ~30 000 frames) — nothing to stop">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconExport}" Width="13" /><TextBlock Text="Save last packets" /></StackPanel>
+            </Button>
+            <Button Classes="magenta" Command="{Binding ToggleRecordingCommand}" MinWidth="110"
+                    ToolTip.Tip="Start / stop a continuous recording of all captured packets to a pcapng file (auto-stops at 1 GB or 60 min)">
+              <StackPanel Orientation="Horizontal" Spacing="7">
+                <Path Classes="icon" Data="{StaticResource IconRecord}" Width="14" IsVisible="{Binding !IsRecording}" />
+                <Path Classes="icon" Data="{StaticResource IconStop}" Width="12" IsVisible="{Binding IsRecording}" />
+                <TextBlock Text="{Binding RecordButtonText}" />
+              </StackPanel>
+            </Button>
+            <Button Classes="icon" Command="{Binding OpenCapturesCommand}" ToolTip.Tip="Open the captures folder">
+              <Path Classes="icon" Data="{StaticResource IconSegments}" Width="14" />
+            </Button>
+          </StackPanel>
+          <TextBlock Text="{Binding RecordStatus}" Foreground="{StaticResource RedBrush}" FontWeight="SemiBold" FontSize="12"
+                     HorizontalAlignment="Right" IsVisible="{Binding IsRecording}" />
+        </StackPanel>
+      </Grid>
+
+      <Border Classes="banner info" Margin="0" IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+      </Border>
+      <Border Classes="card" IsVisible="{Binding !Available}">
+        <TextBlock Text="{Binding EmptyText}" Classes="dim" TextWrapping="Wrap" />
+      </Border>
+
+      <!-- level + gauges -->
+      <Border Classes="card glow" IsVisible="{Binding Available}">
+        <Grid ColumnDefinitions="300,*,*,*">
+          <StackPanel VerticalAlignment="Center" Spacing="8" Margin="4,0,12,0">
+            <TextBlock Text="STORM LEVEL" Classes="section" Margin="0" />
+            <Panel HorizontalAlignment="Left">
+              <Border CornerRadius="14" Background="{Binding LevelBrush}" Opacity="0.35" Margin="-6" Classes="pulse" IsVisible="{Binding IsStorm}" />
+              <Border CornerRadius="12" Padding="18,8" Background="{Binding LevelBackground}" BorderBrush="{Binding LevelBrush}" BorderThickness="1.5">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <Path Classes="icon" Data="{StaticResource IconStorm}" Stroke="{Binding LevelBrush}" Width="20" Height="20" />
+                  <TextBlock Text="{Binding LevelText}" FontSize="24" FontWeight="Bold" LetterSpacing="2" Foreground="{Binding LevelBrush}" />
+                </StackPanel>
+              </Border>
+            </Panel>
+            <TextBlock Text="{Binding LevelDetail}" Classes="dim" TextWrapping="Wrap" FontSize="12.5" />
+            <TextBlock Text="{Binding TotalText}" Classes="caption" />
+          </StackPanel>
+          <c:RateGauge Grid.Column="1" Height="190" Value="{Binding Broadcast}" Baseline="{Binding BaselineBroadcast}" Threshold="{Binding BroadcastThreshold}" Caption="Broadcast" Accent="#00E5FF" />
+          <c:RateGauge Grid.Column="2" Height="190" Value="{Binding Multicast}" Baseline="{Binding BaselineMulticast}" Threshold="{Binding MulticastThreshold}" Caption="Multicast" Accent="#FF2BD6" />
+          <c:RateGauge Grid.Column="3" Height="190" Value="{Binding UnknownUnicast}" Baseline="5" Threshold="{Binding BroadcastThreshold}" Caption="Unknown unicast" Accent="#FFC23D" />
+        </Grid>
+      </Border>
+      <TextBlock IsVisible="{Binding Available}" Classes="caption" Margin="4,-8,0,0"
+                 Text="Gauges are log-scaled (10 → 10k pps). Green band = learned baseline, red tick = alert threshold (Settings → Anomaly thresholds)." />
+
+      <!-- history chart + protocols -->
+      <Grid ColumnDefinitions="2*,*" IsVisible="{Binding Available}">
+        <Border Classes="card" Margin="0,0,7,0" Padding="16,12">
+          <StackPanel Spacing="4">
+            <TextBlock Text="LAST 5 MINUTES" Classes="section" Margin="0" />
+            <c:TimeSeriesChart Height="236" Series="{Binding Series}" Stacked="False" Unit="pps" Seconds="300" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="card" Margin="7,0,0,0" Padding="16,12">
+          <StackPanel Spacing="6">
+            <TextBlock Text="BY PROTOCOL" Classes="section" Margin="0,0,0,4" />
+            <ItemsControl ItemsSource="{Binding Protocols}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ProtocolRow">
+                  <Grid ColumnDefinitions="80,*,80" Margin="0,3">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12.5" VerticalAlignment="Center" />
+                    <c:MeterBar Grid.Column="1" Height="8" Fraction="{Binding Fraction}" BarBrush="{Binding Brush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding Pps}" FontSize="12" Classes="dim" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- loop suspects -->
+      <ItemsControl ItemsSource="{Binding Loops}" IsVisible="{Binding HasLoops}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:LoopRow">
+            <Border Classes="card" Background="#1C0E18" BorderBrush="{StaticResource RedBrush}" Margin="0,0,0,8" BoxShadow="0 0 22 0 #44FF3D5A">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <Path Classes="icon" Data="{StaticResource IconLoop}" Stroke="{StaticResource RedBrush}" Width="26" Height="26" VerticalAlignment="Top" />
+                <StackPanel Grid.Column="1" Margin="14,0" Spacing="3">
+                  <TextBlock Text="LOOP SUSPECT" Foreground="{StaticResource RedBrush}" FontSize="10.5" FontWeight="Bold" LetterSpacing="1.2" />
+                  <TextBlock Text="{Binding Description}" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding Ports}" Foreground="#FFC9D1" FontSize="12.5" />
+                  <TextBlock Text="{Binding Macs}" Classes="dim" FontSize="12" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                  <TextBlock Text="CONFIDENCE" Classes="caption" HorizontalAlignment="Right" />
+                  <TextBlock Text="{Binding Confidence}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource RedBrush}" HorizontalAlignment="Right" />
+                  <TextBlock Text="{Binding Time}" Classes="caption mono" HorizontalAlignment="Right" />
+                </StackPanel>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- sources + ingress -->
+      <Grid ColumnDefinitions="3*,2*" IsVisible="{Binding Available}">
+        <Border Classes="card" Margin="0,0,7,0">
+          <StackPanel>
+            <TextBlock Text="TOP SOURCES" Classes="section" Margin="0,0,0,8" />
+            <TextBlock Text="No broadcast/multicast talkers yet." Classes="dim" IsVisible="{Binding !HasSources}" />
+            <Grid ColumnDefinitions="1.2*,64,64,64,76,1.5*" Margin="0,0,0,4" IsVisible="{Binding HasSources}">
+              <TextBlock Text="Device" Classes="th" />
+              <TextBlock Grid.Column="1" Text="pps" Classes="th" />
+              <TextBlock Grid.Column="2" Text="bcast" Classes="th" />
+              <TextBlock Grid.Column="3" Text="mcast" Classes="th" />
+              <TextBlock Grid.Column="4" Text="Protocol" Classes="th" />
+              <TextBlock Grid.Column="5" Text="Location (switch / port)" Classes="th" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Sources}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:StormSourceRow">
+                  <Grid ColumnDefinitions="1.2*,64,64,64,76,1.5*" Margin="0,4">
+                    <StackPanel Margin="0,0,8,0">
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Name}" />
+                      <TextBlock Text="{Binding Mac}" Classes="caption mono" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding Pps}" Foreground="{Binding Brush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding Bcast}" FontSize="12" Classes="dim" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Text="{Binding Mcast}" FontSize="12" Classes="dim" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="4" Text="{Binding Protocol}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="5" Text="{Binding Location}" FontSize="12" Foreground="#7FEFFF" TextWrapping="Wrap" VerticalAlignment="Center" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="card" Margin="7,0,0,0">
+          <StackPanel>
+            <TextBlock Text="INGRESS PORTS" Classes="section" Margin="0,0,0,2" />
+            <TextBlock Text="Where broadcast/multicast enters the network (per-port SNMP counters)." Classes="caption" Margin="0,0,0,8" />
+            <TextBlock Text="No per-port counters yet (needs SNMP on a managed switch)." Classes="dim" TextWrapping="Wrap" IsVisible="{Binding !HasIngress}" />
+            <ItemsControl ItemsSource="{Binding Ingress}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:IngressRow">
+                  <Grid ColumnDefinitions="*,70,70" Margin="0,4">
+                    <StackPanel>
+                      <TextBlock FontWeight="SemiBold"><Run Text="{Binding Switch}" /><Run Text=" " /><Run Text="{Binding Port}" Foreground="#7FEFFF" /></TextBlock>
+                      <TextBlock Text="{Binding Note}" Classes="caption" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                      <TextBlock Text="{Binding Bcast}" Foreground="{Binding Brush}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                      <TextBlock Text="bcast pps" Classes="caption" HorizontalAlignment="Right" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                      <TextBlock Text="{Binding Mcast}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                      <TextBlock Text="mcast pps" Classes="caption" HorizontalAlignment="Right" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- history -->
+      <Border Classes="card" IsVisible="{Binding Available}">
+        <StackPanel>
+          <TextBlock Text="STORM HISTORY" Classes="section" Margin="0,0,0,8" />
+          <TextBlock Text="No storms recorded." Classes="dim" IsVisible="{Binding !HasHistory}" />
+          <ItemsControl ItemsSource="{Binding History}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:StormHistoryRow">
+                <Grid ColumnDefinitions="120,80,90,90,70,*,Auto" Margin="0,4">
+                  <TextBlock Text="{Binding Start}" Classes="mono" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Text="{Binding Duration}" FontSize="12" VerticalAlignment="Center" />
+                  <Border Grid.Column="2" Classes="badge" BorderBrush="{Binding LevelBrush}" HorizontalAlignment="Left">
+                    <TextBlock Text="{Binding Level}" Foreground="{Binding LevelBrush}" />
+                  </Border>
+                  <TextBlock Grid.Column="3" Text="{Binding Peak}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="4" Text="{Binding Protocol}" FontSize="12" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="5" Text="{Binding Summary}" FontSize="12.5" Classes="dim" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,10,0" />
+                  <Button Grid.Column="6" Classes="link" IsVisible="{Binding HasPcap}" VerticalAlignment="Center" ToolTip.Tip="{Binding PcapPath}"
+                          Command="{Binding $parent[UserControl].((vm:StormViewModel)DataContext).OpenPcapCommand}" CommandParameter="{Binding PcapPath}">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                      <Path Classes="icon" Data="{StaticResource IconRecord}" Stroke="{StaticResource MagentaBrush}" Width="12" Height="12" />
+                      <TextBlock Text="pcap" Foreground="{StaticResource MagentaBrush}" FontWeight="SemiBold" FontSize="12" />
+                    </StackPanel>
+                  </Button>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- switch ports -->
+      <Border Classes="card">
+        <StackPanel>
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="SWITCH PORTS" Classes="section" Margin="0,0,0,2" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+              <TextBlock Text="{Binding PortSummary}" Classes="caption" VerticalAlignment="Center" />
+              <CheckBox IsChecked="{Binding ShowAllPorts}" Content="Show unused ports" FontSize="12" />
+            </StackPanel>
+          </Grid>
+          <TextBlock Text="SNMP IF-MIB / EtherLike counters — problem ports first (CRC/FCS errors, flaps, duplex/speed)." Classes="caption" Margin="0,0,0,8" />
+          <Grid ColumnDefinitions="130,70,82,120,86,86,64,64,52,70,*" Margin="8,0,8,4" IsVisible="{Binding HasPorts}">
+            <TextBlock Text="Switch" Classes="th" />
+            <TextBlock Grid.Column="1" Text="Port" Classes="th" />
+            <TextBlock Grid.Column="2" Text="Status" Classes="th" />
+            <TextBlock Grid.Column="3" Text="Speed / duplex" Classes="th" />
+            <TextBlock Grid.Column="4" Text="In" Classes="th" />
+            <TextBlock Grid.Column="5" Text="Out" Classes="th" />
+            <TextBlock Grid.Column="6" Text="Err/s" Classes="th" />
+            <TextBlock Grid.Column="7" Text="FCS/s" Classes="th" />
+            <TextBlock Grid.Column="8" Text="Flaps" Classes="th" />
+            <TextBlock Grid.Column="9" Text="Bcast pps" Classes="th" />
+            <TextBlock Grid.Column="10" Text="Problem" Classes="th" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding PortRows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:PortHealthRow">
+                <Border Background="{Binding RowBackground}" CornerRadius="7" Padding="8,4">
+                  <Grid ColumnDefinitions="130,70,82,120,86,86,64,64,52,70,*">
+                    <TextBlock Text="{Binding Switch}" FontSize="12.5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBlock Grid.Column="1" Text="{Binding Port}" FontWeight="SemiBold" Foreground="#7FEFFF" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" />
+                      <TextBlock Text="{Binding Status}" Foreground="{Binding StatusBrush}" FontSize="12" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="3" Text="{Binding Link}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="4" Text="{Binding In}" FontSize="12" Classes="dim" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="5" Text="{Binding Out}" FontSize="12" Classes="dim" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="6" Text="{Binding Errors}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="7" Text="{Binding Fcs}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="8" Text="{Binding Flaps}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="9" Text="{Binding Bcast}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="10" Text="{Binding Problem}" Foreground="{Binding ProblemBrush}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding Problem}" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- storm-control check -->
+      <Border Classes="card" IsVisible="{Binding Available}">
+        <StackPanel Spacing="8">
+          <TextBlock Text="STORM-CONTROL CHECK (ACTIVE, OPT-IN)" Classes="section" Margin="0" />
+          <TextBlock Classes="dim" TextWrapping="Wrap" FontSize="12.5"
+                     Text="Sends a short, rate-limited broadcast burst and watches whether your switches' storm control clamps it (via capture and SNMP counters). Use it to verify that a real storm would be contained." />
+          <Border Padding="12,8" CornerRadius="10" Background="#0A1020" BorderBrush="{StaticResource BorderBrushNeon}" BorderThickness="1">
+            <Grid ColumnDefinitions="Auto,*">
+              <Path Classes="icon" Data="{StaticResource IconShield}" Stroke="{StaticResource AmberBrush}" Width="16" Height="16" />
+              <TextBlock Grid.Column="1" Text="{Binding CheckReason}" Margin="10,0,0,0" TextWrapping="Wrap" FontSize="12.5" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+          <StackPanel Orientation="Horizontal" Spacing="10" IsEnabled="{Binding CheckAvailable}">
+            <TextBlock Text="Rate (pps)" Classes="dim" VerticalAlignment="Center" />
+            <NumericUpDown Value="{Binding CheckPps}" Minimum="100" Maximum="5000" Increment="100" FormatString="0" Width="110" />
+            <TextBlock Text="Duration (s)" Classes="dim" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <NumericUpDown Value="{Binding CheckSeconds}" Minimum="0.5" Maximum="5" Increment="0.5" FormatString="0.0" Width="90" />
+            <Button Classes="danger" Command="{Binding RunCheckCommand}" Margin="8,0,0,0">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconStorm}" Width="13" /><TextBlock Text="Run storm-control check…" /></StackPanel>
+            </Button>
+            <ProgressBar IsIndeterminate="True" Width="120" Height="5" MinHeight="5" VerticalAlignment="Center" IsVisible="{Binding IsChecking}" />
+            <TextBlock Text="Capped at 5 000 pps / 5 s" Classes="caption" VerticalAlignment="Center" />
+          </StackPanel>
+          <Border IsVisible="{Binding HasCheckResult}" Padding="14,10" CornerRadius="10" Background="#0A1020" BorderBrush="{Binding CheckBrush}" BorderThickness="1">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{Binding CheckVerdict}" Foreground="{Binding CheckBrush}" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" />
+              <ItemsControl ItemsSource="{Binding CheckDetails}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="x:String">
+                    <Grid ColumnDefinitions="14,*" Margin="0,1">
+                      <Ellipse Width="4" Height="4" Fill="{StaticResource CyanBrush}" VerticalAlignment="Top" Margin="2,7,0,0" HorizontalAlignment="Left" />
+                      <TextBlock Grid.Column="1" Text="{Binding}" Classes="dim" FontSize="12.5" TextWrapping="Wrap" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#0D1424"/>
+      <stop offset="1" stop-color="#070B14"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.52" r="0.5">
+      <stop offset="0" stop-color="#7A5CFF" stop-opacity="0.3"/>
+      <stop offset="0.6" stop-color="#7A5CFF" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#7A5CFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="neon" gradientUnits="userSpaceOnUse" x1="40" y1="36" x2="216" y2="220">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="0.6" stop-color="#7A5CFF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="84" y1="70" x2="172" y2="200">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="0.55" stop-color="#7A5CFF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="256" height="256" rx="52" fill="url(#tile)"/>
+  <rect x="0" y="0" width="256" height="256" rx="52" fill="url(#halo)"/>
+  <rect x="6" y="6" width="244" height="244" rx="47" fill="none" stroke="url(#neon)" stroke-opacity="0.5" stroke-width="12"/>
+  <g fill="none" stroke="url(#neon)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128,72 L128,28 M180,102 L218.1,80 M180,162 L218.1,184 M128,192 L128,236 M76,162 L37.9,184 M76,102 L37.9,80" stroke-width="12" stroke-opacity="0.5"/>
+    <path d="M128,26 L219.8,79 L219.8,185 L128,238 L36.2,185 L36.2,79 Z" stroke-width="16" stroke-opacity="0.85"/>
+  </g>
+  <path d="M114,106 L84,72 L86,36 M142,106 L172,72 L170,36 M110,118 L64,102 L40,116 M146,118 L192,102 L216,116 M110,130 L64,150 L46,182 M146,130 L192,150 L210,182 M116,140 L88,184 L90,218 M140,140 L168,184 L166,218" fill="none" stroke="url(#body)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="128" cy="168" rx="34" ry="40" fill="url(#body)"/>
+  <circle cx="128" cy="114" r="25" fill="url(#body)"/>
+</svg>

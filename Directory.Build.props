@@ -1,0 +1,44 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+  <!-- Product identity (FreeSense branding). -->
+  <PropertyGroup>
+    <Company>FreeSense.org</Company>
+    <Product>FreeSense NetSpider</Product>
+    <Authors>FreeSense.org</Authors>
+    <Copyright>© 2026 FreeSense.org</Copyright>
+  </PropertyGroup>
+
+  <!-- Versioning. Release and pre-release versions are computed from CHANGELOG.md (tools/ChangelogTool) and tagged by
+       the release workflows; never bump a version by hand (CHANGELOG-GUIDELINES.md). The src projects read the tag
+       (v1.2.3) via MinVer:
+         - tag v1.2.3 on HEAD          -> 1.2.3
+         - N commits after v1.2.3      -> 1.2.4-alpha.0.N
+         - no 1.x tag yet (only v0.x)  -> 1.0.0-alpha.0.N  (MinVerMinimumMajorMinor 1.0: there are no public 0.x builds)
+       An explicit version wins: `dotnet publish -p:Version=1.2.3` (what build/release.ps1 and CI pass) is forwarded to
+       MinVerVersionOverride, so Version, FileVersion and InformationalVersion all agree.
+       Projects without MinVer (tests, tools, installer) use the 0.1.0-dev fallback below. -->
+  <PropertyGroup>
+    <NetSpiderIsSrcProject>false</NetSpiderIsSrcProject>
+    <NetSpiderIsSrcProject Condition="$(MSBuildProjectDirectory.StartsWith('$(MSBuildThisFileDirectory)src'))">true</NetSpiderIsSrcProject>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(NetSpiderIsSrcProject)' == 'true'">
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    <MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
+    <MinVerVerbosity>quiet</MinVerVerbosity>
+    <MinVerVersionOverride Condition="'$(MinVerVersionOverride)' == '' and '$(Version)' != ''">$(Version)</MinVerVersionOverride>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(NetSpiderIsSrcProject)' == 'true'">
+    <PackageReference Include="MinVer" PrivateAssets="all" />
+  </ItemGroup>
+  <PropertyGroup>
+    <Version Condition="'$(Version)' == ''">0.1.0-dev</Version>
+  </PropertyGroup>
+</Project>

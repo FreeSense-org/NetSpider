@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#0D1424"/>
+      <stop offset="1" stop-color="#070B14"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.52" r="0.5">
+      <stop offset="0" stop-color="#7A5CFF" stop-opacity="0.26"/>
+      <stop offset="0.6" stop-color="#7A5CFF" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#7A5CFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="neon" gradientUnits="userSpaceOnUse" x1="40" y1="36" x2="216" y2="220">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="0.6" stop-color="#7A5CFF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="84" y1="70" x2="172" y2="200">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="0.55" stop-color="#7A5CFF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#tile)"/>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#halo)"/>
+  <rect x="9.5" y="9.5" width="237" height="237" rx="54.5" fill="none" stroke="url(#neon)" stroke-opacity="0.45" stroke-width="3"/>
+  <g fill="none" stroke="url(#neon)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128,118 L128,30 M138.4,124 L214.6,80 M138.4,136 L214.6,180 M128,142 L128,230 M117.6,136 L41.4,180 M117.6,124 L41.4,80" stroke-width="2.6" stroke-opacity="0.5"/>
+    <path d="M128,88 Q144.4,101.7 164.4,109 Q160.7,130 164.4,151 Q144.4,158.3 128,172 Q111.6,158.3 91.6,151 Q95.3,130 91.6,109 Q111.6,101.7 128,88 Z" stroke-width="2.6" stroke-opacity="0.55"/>
+    <path d="M128,60 Q155.3,82.8 188.6,95 Q182.6,130 188.6,165 Q155.3,177.2 128,200 Q100.7,177.2 67.4,165 Q73.4,130 67.4,95 Q100.7,82.8 128,60 Z" stroke-width="2.6" stroke-opacity="0.5"/>
+    <path d="M128,30 L214.6,80 L214.6,180 L128,230 L41.4,180 L41.4,80 Z" stroke-width="7" filter="url(#glow)"/>
+  </g>
+  <g filter="url(#glow)">
+    <path d="M120,112 L98,88 L100,62 M136,112 L158,88 L156,62 M117,120 L84,106 L66,116 M139,120 L172,106 L190,116 M117,128 L84,142 L70,166 M139,128 L172,142 L186,166 M120,136 L100,166 L102,192 M136,136 L156,166 L154,192" fill="none" stroke="url(#body)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128,138 C144,138 152,150 152,164 C152,180 141,192 128,192 C115,192 104,180 104,164 C104,150 112,138 128,138 Z" fill="url(#body)"/>
+    <path d="M128,104 C138,104 145,111 145,121 C145,131 138,137 128,137 C118,137 111,131 111,121 C111,111 118,104 128,104 Z" fill="url(#body)"/>
+  </g>
+  <path d="M128,148 L136,163 L128,178 L120,163 Z" fill="#070B14" fill-opacity="0.55"/>
+  <circle cx="122.5" cy="116" r="3.2" fill="#070B14"/>
+  <circle cx="133.5" cy="116" r="3.2" fill="#070B14"/>
+</svg>

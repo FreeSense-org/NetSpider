@@ -1,0 +1,10 @@
+{
+  // Copy to probe.json next to netspider-probe(.exe). Command-line arguments override these values.
+  "hub": "10.40.210.17",          // omit to discover the hub by authenticated broadcast (UDP 47811)
+  "key": "PASTE-THE-BASE64-KEY-FROM-NETSPIDER-SETTINGS",
+  "id": "LAPTOP-WIFI",
+  "targets": [ "gw", "hub", "1.1.1.1" ],
+  "interval": 2,
+  "window": 10,
+  "quiet": false
+}

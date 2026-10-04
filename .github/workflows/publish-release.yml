@@ -1,0 +1,112 @@
+name: Publish release
+
+# Release channel, step 2 of 2 (automatic): when a release PR from release.yml is merged, main gets the squash commit
+# "chore(release): vX.Y.Z". This workflow tags that commit vX.Y.Z and calls publish.yml (Release channel; the version
+# is published to the Pre-release channel too). Release notes = the "## [X.Y.Z]" section (notes --version).
+#
+# Triggers:
+#   push to main          the head commit message starts with "chore(release): v"
+#   schedule (hourly)     safety net: if auto-merge was enabled with GITHUB_TOKEN, GitHub performs the merge as
+#                         github-actions[bot] and that push does NOT start workflows. The scheduled run finds the
+#                         newest release commit on main and publishes it if its tag doesn't exist yet. Setting the
+#                         RELEASE_PR_TOKEN secret (see release.yml) makes the push trigger work directly.
+#   workflow_dispatch     same as the schedule, on demand
+# Idempotent: a release commit whose tag already exists is left alone. To re-publish an existing tag, run publish.yml.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  find:
+    name: Tag release
+    if: "github.event_name != 'push' || startsWith(github.event.head_commit.message, 'chore(release): v')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the tag
+    outputs:
+      publish: ${{ steps.find.outputs.publish }}
+      version: ${{ steps.find.outputs.version }}
+      sha: ${{ steps.find.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Find the release commit
+        id: find
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          rx='^chore\(release\): v([0-9]+\.[0-9]+\.[0-9]+)( \(#[0-9]+\))?$'
+          if [ "$EVENT" = "push" ]; then
+            sha="$GITHUB_SHA"
+            subject=$(git log -1 --format=%s "$sha")
+          else
+            line=$(git log -n 300 --format='%H %s' HEAD | grep -E "^[0-9a-f]{40} chore\(release\): v[0-9]+\.[0-9]+\.[0-9]+( \(#[0-9]+\))?$" | head -n 1 || true)
+            sha="${line%% *}"
+            subject="${line#* }"
+          fi
+          if [ -z "$sha" ] || ! [[ "$subject" =~ $rx ]]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "No release commit found ($EVENT)."
+            exit 0
+          fi
+          version="${BASH_REMATCH[1]}"
+          if git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "v$version is already tagged: nothing to do."
+            exit 0
+          fi
+          { echo "publish=true"; echo "version=$version"; echo "sha=$sha"; } >> "$GITHUB_OUTPUT"
+          echo "Release commit $sha: v$version"
+
+      - uses: actions/setup-dotnet@v4
+        if: steps.find.outputs.publish == 'true'
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Check the changelog section and tag
+        if: steps.find.outputs.publish == 'true'
+        shell: bash
+        env:
+          VERSION: ${{ steps.find.outputs.version }}
+          SHA: ${{ steps.find.outputs.sha }}
+        run: |
+          # CHANGELOG.md as of the release commit (HEAD may already be further ahead on a scheduled run)
+          git show "$SHA:CHANGELOG.md" > "$RUNNER_TEMP/CHANGELOG.md"
+          dotnet build tools/ChangelogTool -c Release -nologo -v q
+          cl() { dotnet run --project tools/ChangelogTool -c Release --no-build -- "$@"; }
+          cl validate "$RUNNER_TEMP/CHANGELOG.md"
+          cl notes --version "$VERSION" --file "$RUNNER_TEMP/CHANGELOG.md" --out "$RUNNER_TEMP/notes.md"
+          git tag "v$VERSION" "$SHA"
+          git push origin "refs/tags/v$VERSION"
+          { echo "### Release v$VERSION"; echo; cat "$RUNNER_TEMP/notes.md"; } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Publish release
+    needs: find
+    if: needs.find.outputs.publish == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      version: ${{ needs.find.outputs.version }}
+      channel: release
+      ref: ${{ needs.find.outputs.sha }}

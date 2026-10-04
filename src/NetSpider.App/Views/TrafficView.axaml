@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NetSpider.App.ViewModels"
+             xmlns:c="using:NetSpider.App.Controls"
+             x:Class="NetSpider.App.Views.TrafficView"
+             x:DataType="vm:TrafficViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="18,14,22,18" Spacing="14">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock Text="Traffic" Classes="h1" />
+          <TextBlock Text="Live capture statistics over the last 120 seconds. On a switched LAN you see broadcast/multicast plus your own traffic — use a SPAN/mirror port for everything." Classes="caption" TextWrapping="Wrap" />
+        </StackPanel>
+      </Grid>
+
+      <TextBlock IsVisible="{Binding !HasData}" Text="No traffic snapshots yet — start monitoring (or the demo network)." Classes="dim" Margin="0,30" HorizontalAlignment="Center" />
+
+      <!-- KPI row -->
+      <Grid ColumnDefinitions="*,*,*,*" IsVisible="{Binding HasData}">
+        <Border Classes="card" Margin="0,0,10,0">
+          <StackPanel><TextBlock Text="TOTAL" Classes="section" Margin="0,0,0,4" /><TextBlock Text="{Binding TotalPps}" FontSize="28" FontWeight="Bold" /><TextBlock Text="packets / s" Classes="caption" /></StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="card" Margin="0,0,10,0">
+          <StackPanel><TextBlock Text="BANDWIDTH" Classes="section" Margin="0,0,0,4" /><TextBlock Text="{Binding Bandwidth}" FontSize="28" FontWeight="Bold" /><TextBlock Text="seen by the adapter" Classes="caption" /></StackPanel>
+        </Border>
+        <Border Grid.Column="2" Classes="card" Margin="0,0,10,0">
+          <StackPanel><TextBlock Text="MULTICAST" Classes="section" Margin="0,0,0,4" /><TextBlock Text="{Binding MulticastText}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource MagentaBrush}" /><TextBlock Text="of all packets" Classes="caption" /></StackPanel>
+        </Border>
+        <Border Grid.Column="3" Classes="card">
+          <StackPanel><TextBlock Text="DROPPED" Classes="section" Margin="0,0,0,4" /><TextBlock Text="{Binding Dropped}" FontSize="28" FontWeight="Bold" Foreground="{Binding DroppedBrush}" /><TextBlock Text="{Binding DroppedDelta}" Classes="caption" /></StackPanel>
+        </Border>
+      </Grid>
+
+      <Grid ColumnDefinitions="*,300" IsVisible="{Binding HasData}">
+        <Border Classes="card" Margin="0,0,14,0">
+          <StackPanel>
+            <TextBlock Text="PACKETS / S — UNICAST · MULTICAST · BROADCAST (STACKED)" Classes="section" Margin="0,0,0,4" />
+            <c:TimeSeriesChart Height="250" Series="{Binding Totals}" Stacked="True" Unit="pps" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="card">
+          <StackPanel>
+            <TextBlock Text="BROADCAST SHARE" Classes="section" Margin="0,0,0,4" />
+            <c:Gauge Height="210" Value="{Binding BroadcastPercent}" Maximum="30" Text="{Binding BroadcastText}" Caption="broadcast" HighIsGood="False" />
+            <TextBlock Text="{Binding StormThreshold}" Classes="caption" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <Border Classes="card" IsVisible="{Binding HasData}">
+        <StackPanel>
+          <TextBlock Text="PACKETS / S BY PROTOCOL (TOP 8)" Classes="section" Margin="0,0,0,4" />
+          <c:TimeSeriesChart Height="230" Series="{Binding Protocols}" Stacked="False" Unit="pps" />
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card" IsVisible="{Binding HasData}">
+        <StackPanel>
+          <TextBlock Text="TOP TALKERS" Classes="section" Margin="0,0,0,8" />
+          <Grid ColumnDefinitions="30,2*,140,70,80,80,110,130" Margin="0,0,0,6">
+            <TextBlock Text="#" Classes="caption" />
+            <TextBlock Grid.Column="1" Text="Device" Classes="caption" />
+            <TextBlock Grid.Column="2" Text="MAC" Classes="caption" />
+            <TextBlock Grid.Column="3" Text="pps" Classes="caption" />
+            <TextBlock Grid.Column="4" Text="bcast pps" Classes="caption" />
+            <TextBlock Grid.Column="5" Text="mcast pps" Classes="caption" />
+            <TextBlock Grid.Column="6" Text="bandwidth" Classes="caption" />
+            <TextBlock Grid.Column="7" Text="share" Classes="caption" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding TopTalkers}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:TalkerRow">
+                <Grid ColumnDefinitions="30,2*,140,70,80,80,110,130" Margin="0,4">
+                  <TextBlock Text="{Binding Rank}" Classes="dim" />
+                  <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="2" Text="{Binding Mac}" Classes="mono" Foreground="{StaticResource TextDimBrush}" />
+                  <TextBlock Grid.Column="3" Text="{Binding Pps}" Foreground="{Binding Brush}" FontWeight="SemiBold" />
+                  <TextBlock Grid.Column="4" Text="{Binding Broadcast}" Foreground="{StaticResource AmberBrush}" />
+                  <TextBlock Grid.Column="5" Text="{Binding Multicast}" Foreground="{StaticResource MagentaBrush}" />
+                  <TextBlock Grid.Column="6" Text="{Binding Bandwidth}" />
+                  <Border Grid.Column="7" Height="6" Width="120" Background="#16213A" CornerRadius="3" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Border Width="{Binding ShareWidth}" Background="{Binding Brush}" CornerRadius="3" HorizontalAlignment="Left" />
+                  </Border>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

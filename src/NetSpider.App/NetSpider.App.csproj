@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <AssemblyName>NetSpider</AssemblyName>
+    <RootNamespace>NetSpider.App</RootNamespace>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationIcon>Assets\Brand\netspider.ico</ApplicationIcon>
+    <!-- Shipped architectures (Velopack Setup/Portable + MSI per RID). Windows 11 has no 32-bit edition; x86 is for Windows 10 x86. -->
+    <RuntimeIdentifiers>win-x64;win-arm64;win-x86</RuntimeIdentifiers>
+  </PropertyGroup>
+  <!-- Only when publishing for a RID (dotnet publish -r win-x64): self-contained (no .NET install needed) and ReadyToRun for
+       faster startup. No trimming: Avalonia/compiled bindings and the JSON settings rely on reflection.
+       Not single-file: Velopack delta updates work best on loose files, and the MSI installs the folder as-is. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- License notices ship next to NetSpider.exe (About dialog "Third-party notices" tab reads it). -->
+    <Content Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!-- Both manifests are asInvoker. Release builds self-elevate in Program.Main (after the Velopack hooks); Debug stays unelevated. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' != 'Release'">
+    <ApplicationManifest>app.debug.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+    <!-- About → License tab -->
+    <AvaloniaResource Include="..\..\LICENSE" Link="Assets\LICENSE.txt" />
+    <AvaloniaResource Include="..\..\THIRD-PARTY-NOTICES.txt" Link="Assets\THIRD-PARTY-NOTICES.txt" />
+    <!-- About → Changelog tab and the "What's new" dialog (Services/EmbeddedChangelog.cs) -->
+    <AvaloniaResource Include="..\..\CHANGELOG.md" Link="Assets\CHANGELOG.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Avalonia.Skia" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
+    <PackageReference Include="Avalonia.Svg.Skia" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Velopack" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Extensions.Hosting" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NetSpider.Core\NetSpider.Core.csproj" />
+    <ProjectReference Include="..\NetSpider.Capture\NetSpider.Capture.csproj" />
+    <ProjectReference Include="..\NetSpider.Discovery\NetSpider.Discovery.csproj" />
+    <ProjectReference Include="..\NetSpider.Diagnostics\NetSpider.Diagnostics.csproj" />
+    <ProjectReference Include="..\NetSpider.Fingerprint\NetSpider.Fingerprint.csproj" />
+    <ProjectReference Include="..\NetSpider.Wifi\NetSpider.Wifi.csproj" />
+    <ProjectReference Include="..\NetSpider.Export\NetSpider.Export.csproj" />
+  </ItemGroup>
+</Project>

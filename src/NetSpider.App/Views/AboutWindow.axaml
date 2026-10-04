@@ -1,0 +1,140 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NetSpider.App.ViewModels"
+        xmlns:c="using:NetSpider.App.Controls"
+        x:Class="NetSpider.App.Views.AboutWindow"
+        x:DataType="vm:AboutWindowViewModel"
+        Width="760" Height="680" MinWidth="620" MinHeight="520"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="#0D1424">
+  <Window.Styles>
+    <Style Selector="TextBlock.k">
+      <Setter Property="Foreground" Value="{StaticResource TextDimBrush}" />
+      <Setter Property="FontSize" Value="12.5" />
+    </Style>
+    <Style Selector="Button.link">
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+  </Window.Styles>
+
+  <DockPanel Margin="24,22,24,18">
+
+    <!-- header -->
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*" Margin="0,0,0,16">
+      <Border Width="84" Height="84" CornerRadius="20" Background="#1400E5FF" BorderBrush="#6600E5FF" BorderThickness="1"
+              BoxShadow="0 0 26 0 #4400E5FF" ClipToBounds="True">
+        <Panel>
+          <Image Source="{Binding Logo}" IsVisible="{Binding HasLogo}" Stretch="Uniform" Margin="8" />
+          <Path Data="{StaticResource IconSpider}" Stroke="{StaticResource AccentGradient}" StrokeThickness="1.7" IsVisible="{Binding !HasLogo}"
+                StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform" Margin="16" />
+        </Panel>
+      </Border>
+      <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Center" Spacing="4">
+        <TextBlock Text="{Binding BrandTitle}" FontSize="24" FontWeight="Bold" LetterSpacing="0.3" />
+        <TextBlock Text="{Binding VersionLine}" FontSize="13.5" Foreground="#B9F9FF" />
+        <TextBlock Text="{Binding BuildLine}" Classes="caption mono" FontSize="11.5" />
+      </StackPanel>
+    </Grid>
+
+    <!-- footer -->
+    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
+      <TextBlock Text="{Binding Status}" Foreground="{StaticResource GreenBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+      <Button Grid.Column="1" Classes="ghost" Content="Close" MinWidth="96" HorizontalContentAlignment="Center" IsCancel="True" Click="OnClose" />
+    </Grid>
+
+    <!-- tabs -->
+    <Border DockPanel.Dock="Top" Classes="segmented" HorizontalAlignment="Left" Margin="0,0,0,12">
+      <StackPanel Orientation="Horizontal">
+        <RadioButton Classes="seg" GroupName="aboutTabs" Content="About" IsChecked="{Binding IsAboutTab}" />
+        <RadioButton Classes="seg" GroupName="aboutTabs" Content="Changelog" IsChecked="{Binding IsChangelogTab}" />
+        <RadioButton Classes="seg" GroupName="aboutTabs" Content="License" IsChecked="{Binding IsLicenseTab}" />
+        <RadioButton Classes="seg" GroupName="aboutTabs" Content="Third-party notices" IsChecked="{Binding IsNoticesTab}" />
+      </StackPanel>
+    </Border>
+
+    <Panel>
+      <!-- ===== About ===== -->
+      <ScrollViewer IsVisible="{Binding IsAboutTab}" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="12">
+          <!-- FreeSense -->
+          <Border Classes="card glow" Padding="16,14">
+            <StackPanel Spacing="8">
+              <TextBlock FontSize="14.5" TextWrapping="Wrap">
+                <Run Text="NetSpider is part of the " /><Run Text="FreeSense" FontWeight="Bold" Foreground="{StaticResource CyanBrush}" /><Run Text=" project — free, open tools for understanding your network." />
+              </TextBlock>
+              <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto" Margin="0,2,0,0">
+                <TextBlock Classes="k" Text="Website" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Classes="link" HorizontalAlignment="Left" Content="{Binding Website}" Command="{Binding OpenUrlCommand}" CommandParameter="{Binding Website}" />
+                <TextBlock Grid.Row="1" Classes="k" Text="Source code" VerticalAlignment="Center" Margin="0,4,0,0" />
+                <Button Grid.Row="1" Grid.Column="1" Classes="link" HorizontalAlignment="Left" Margin="0,4,0,0" Content="{Binding Repository}" Command="{Binding OpenUrlCommand}" CommandParameter="{Binding Repository}" />
+                <TextBlock Grid.Row="2" Classes="k" Text="Releases" VerticalAlignment="Center" Margin="0,4,0,0" />
+                <Button Grid.Row="2" Grid.Column="1" Classes="link" HorizontalAlignment="Left" Margin="0,4,0,0" Content="{Binding ReleasesPage}" Command="{Binding OpenUrlCommand}" CommandParameter="{Binding ReleasesPage}" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- system info -->
+          <Border Classes="card" Padding="16,12">
+            <StackPanel>
+              <TextBlock Text="SYSTEM" Classes="section" Margin="0,0,0,6" />
+              <ItemsControl ItemsSource="{Binding SystemInfo}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:InfoRow">
+                    <Grid ColumnDefinitions="150,*" Margin="0,3">
+                      <TextBlock Classes="k" Text="{Binding Label}" />
+                      <SelectableTextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12.5" TextWrapping="Wrap" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+
+          <!-- actions -->
+          <WrapPanel>
+            <Button Classes="accent" Margin="0,0,8,8" Command="{Binding CheckForUpdatesCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconRefresh}" Stroke="#B9F9FF" StrokeThickness="1.7" Width="13" Height="13" Stretch="Uniform" /><TextBlock Text="Check for updates" /></StackPanel>
+            </Button>
+            <Button Classes="ghost" Margin="0,0,8,8" Command="{Binding CopyDiagnosticsCommand}" ToolTip.Tip="Copies version and system information for a support request">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconCopy}" Stroke="{StaticResource TextDimBrush}" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" /><TextBlock Text="Copy diagnostic info" /></StackPanel>
+            </Button>
+            <Button Classes="magenta" Margin="0,0,8,8" Command="{Binding ReportProblemCommand}" ToolTip.Tip="Copies the diagnostic info and opens a new GitHub issue">
+              <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconWarn}" Stroke="#FFC4F3" StrokeThickness="1.6" Width="13" Height="13" Stretch="Uniform" /><TextBlock Text="Report a problem" /></StackPanel>
+            </Button>
+          </WrapPanel>
+          <StackPanel Orientation="Horizontal" Spacing="18" Margin="2,-4,0,0">
+            <Button Classes="link" Content="Open logs folder" Command="{Binding OpenLogsCommand}" />
+            <Button Classes="link" Content="Open data folder" Command="{Binding OpenDataCommand}" />
+            <Button Classes="link" Content="Show what's new" Command="{Binding ShowWhatsNewCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- ===== Changelog (embedded CHANGELOG.md) ===== -->
+      <DockPanel IsVisible="{Binding IsChangelogTab}">
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="2,10,2,0">
+          <TextBlock Classes="caption" VerticalAlignment="Center" TextWrapping="Wrap"
+                     Text="Every release, newest first. Click a version to show or hide its changes." />
+          <Button Grid.Column="1" Classes="link" Content="CHANGELOG.md on GitHub" Command="{Binding OpenChangelogOnGitHubCommand}" Margin="12,0,0,0" />
+        </Grid>
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+          <c:ChangelogView Releases="{Binding ChangelogReleases}" Collapsible="True" CurrentVersion="{Binding CurrentVersion}" Margin="0,0,12,0" />
+        </ScrollViewer>
+      </DockPanel>
+
+      <!-- ===== License ===== -->
+      <Border Classes="card" Padding="0" IsVisible="{Binding IsLicenseTab}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" Padding="16,14">
+          <SelectableTextBlock Text="{Binding LicenseText}" Classes="mono" TextWrapping="Wrap" FontSize="12.5" LineHeight="19" />
+        </ScrollViewer>
+      </Border>
+
+      <!-- ===== Third-party notices ===== -->
+      <Border Classes="card" Padding="0" IsVisible="{Binding IsNoticesTab}">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" Padding="16,14">
+          <SelectableTextBlock Text="{Binding NoticesText}" Classes="mono" TextWrapping="Wrap" FontSize="12" LineHeight="18" />
+        </ScrollViewer>
+      </Border>
+    </Panel>
+  </DockPanel>
+</Window>

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#0D1424"/>
+      <stop offset="1" stop-color="#070B14"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.52" r="0.5">
+      <stop offset="0" stop-color="#7A5CFF" stop-opacity="0.3"/>
+      <stop offset="0.6" stop-color="#7A5CFF" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#7A5CFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="neon" gradientUnits="userSpaceOnUse" x1="40" y1="36" x2="216" y2="220">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="0.6" stop-color="#7A5CFF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="84" y1="70" x2="172" y2="200">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="0.55" stop-color="#7A5CFF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="256" height="256" rx="52" fill="url(#tile)"/>
+  <rect x="0" y="0" width="256" height="256" rx="52" fill="url(#halo)"/>
+  <rect x="6" y="6" width="244" height="244" rx="47" fill="none" stroke="url(#neon)" stroke-opacity="0.5" stroke-width="12"/>
+  <path d="M58,116 Q76.6,96.5 103.4,99.2 M198,140 Q179.4,159.5 152.6,156.8" fill="none" stroke="url(#neon)" stroke-width="12" stroke-opacity="0.6" stroke-linecap="round"/>
+  <path d="M58,210 L58,46 L198,210 L198,46" fill="none" stroke="url(#neon)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="rotate(-40.5 128 128)">
+    <path d="M120,108 L102,86 L100,64 M136,108 L154,86 L156,64 M116,118 L84,106 L68,112 M140,118 L172,106 L188,112 M116,134 L84,146 L72,166 M140,134 L172,146 L184,166 M120,144 L102,170 L100,194 M136,144 L154,170 L156,194" fill="none" stroke="#070B14" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M120,108 L102,86 L100,64 M136,108 L154,86 L156,64 M116,118 L84,106 L68,112 M140,118 L172,106 L188,112 M116,134 L84,146 L72,166 M140,134 L172,146 L184,166 M120,144 L102,170 L100,194 M136,144 L154,170 L156,194" fill="none" stroke="#E9FDFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="150" rx="26" ry="30" fill="#E9FDFF" stroke="#070B14" stroke-width="9"/>
+    <circle cx="128" cy="114" r="18" fill="#E9FDFF" stroke="#070B14" stroke-width="9"/>
+  </g>
+</svg>

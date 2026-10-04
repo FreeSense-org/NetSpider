@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#0D1424"/>
+      <stop offset="1" stop-color="#070B14"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.52" r="0.5">
+      <stop offset="0" stop-color="#7A5CFF" stop-opacity="0.26"/>
+      <stop offset="0.6" stop-color="#7A5CFF" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#7A5CFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="neon" gradientUnits="userSpaceOnUse" x1="40" y1="36" x2="216" y2="220">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="0.6" stop-color="#7A5CFF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="84" y1="70" x2="172" y2="200">
+      <stop offset="0" stop-color="#00E5FF"/>
+      <stop offset="0.55" stop-color="#7A5CFF"/>
+      <stop offset="1" stop-color="#FF2BD6"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#tile)"/>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#halo)"/>
+  <rect x="9.5" y="9.5" width="237" height="237" rx="54.5" fill="none" stroke="url(#neon)" stroke-opacity="0.45" stroke-width="3"/>
+  <g fill="none" stroke="url(#neon)" stroke-linecap="round">
+    <path d="M66,92 Q75,81.8 88.5,83.5 M66,128 Q84.6,107 112.4,110.4 M66,164 Q94.1,132.1 136.3,137.4 M190,164 Q181,174.2 167.5,172.5 M190,128 Q171.4,149 143.6,145.6 M190,92 Q161.9,123.9 119.7,118.6" stroke-width="2.6" stroke-opacity="0.6"/>
+  </g>
+  <path d="M66,198 L66,58 L190,198 L190,58" fill="none" stroke="url(#neon)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <g transform="rotate(-41.5 128 128) translate(128 128) scale(0.7) translate(-128 -128)">
+    <path d="M121,111 L100,86 L94,60 M135,111 L156,86 L162,60 M118,117 L88,101 L68,104 M138,117 L168,101 L188,104 M118,124 L86,139 L72,162 M138,124 L170,139 L184,162 M121,130 L99,160 L95,186 M135,130 L157,160 L161,186" fill="none" stroke="#070B14" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="128" cy="154" rx="25" ry="30" fill="#070B14"/>
+    <ellipse cx="128" cy="118" rx="19" ry="19.5" fill="#070B14"/>
+    <g filter="url(#glow)">
+      <path d="M121,111 L100,86 L94,60 M135,111 L156,86 L162,60 M118,117 L88,101 L68,104 M138,117 L168,101 L188,104 M118,124 L86,139 L72,162 M138,124 L170,139 L184,162 M121,130 L99,160 L95,186 M135,130 L157,160 L161,186" fill="none" stroke="#E9FDFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="128" cy="154" rx="19" ry="24" fill="#E9FDFF"/>
+      <ellipse cx="128" cy="118" rx="13" ry="13.5" fill="#E9FDFF"/>
+    </g>
+    <ellipse cx="128" cy="154" rx="13" ry="17" fill="url(#neon)"/>
+  </g>
+</svg>

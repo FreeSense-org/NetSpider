@@ -1,0 +1,187 @@
+name: CI
+
+# Required status checks for main (branch protection), by job name:
+#   "Build and test"   build + unit/integration tests
+#   "Changelog"        CHANGELOG.md is valid, and the PR adds an [Unreleased] entry (unless labelled skip-changelog)
+#   "PR title"         Conventional Commit PR title (squash merges use it as the commit message)
+#
+# None of these jobs has a job-level `if:`. They run for every trigger and the PR-only steps simply do nothing on
+# push/dispatch runs. That matters for release PRs: release.yml opens them with GITHUB_TOKEN, which doesn't trigger
+# pull_request workflows, so it runs `gh workflow run ci.yml --ref release/vX.Y.Z` instead. That dispatch run reports
+# all three check names on the release branch's head commit (which is the PR's head commit), so the required checks
+# are satisfied. A skipped job would also count as passing, but then a skipped check could hide a failure; a job that
+# runs and passes is explicit.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    # edited: the title check reruns when the title changes; labeled/unlabeled: the skip-changelog label
+    types: [opened, synchronize, reopened, ready_for_review, edited, labeled, unlabeled]
+  workflow_dispatch:
+
+concurrency:
+  # One run per PR (or ref); a newer event (push, title edit, label) replaces the running one. Every run executes all
+  # jobs, so the replacement reports the same checks.
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  build-test:
+    name: Build and test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # MinVer computes the version from tags + commit height
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: |
+          dotnet tool restore
+          dotnet restore NetworkScan.slnx
+
+      - name: Build
+        run: dotnet build NetworkScan.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test NetworkScan.slnx -c Release --no-build --logger trx --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: warn
+
+  changelog:
+    name: Changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # check-pr reads CHANGELOG.md at the base branch
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build ChangelogTool
+        run: dotnet build tools/ChangelogTool -c Release -nologo -v q
+
+      - name: Validate CHANGELOG.md
+        run: dotnet run --project tools/ChangelogTool -c Release --no-build -- validate CHANGELOG.md
+
+      - name: Require an [Unreleased] entry
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          TITLE: ${{ github.event.pull_request.title }}
+          SKIP: ${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "Not a pull request ($EVENT): the format check above is all there is to do."
+            exit 0
+          fi
+          if [ "$SKIP" = "true" ]; then
+            echo "::notice::Labelled 'skip-changelog': no [Unreleased] entry required."
+            echo "### Changelog: skipped (label \`skip-changelog\`)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Release PRs (release.yml) move [Unreleased] into a new version section instead of adding an entry.
+          if [[ "$HEAD_REF" == release/v* && "$TITLE" =~ ^chore\(release\):\ v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release PR: [Unreleased] was moved into a version section; no new entry expected."
+            exit 0
+          fi
+          dotnet run --project tools/ChangelogTool -c Release --no-build -- check-pr --base "origin/$BASE_REF"
+
+  pr-title:
+    name: PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conventional Commit title
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "Not a pull request ($EVENT): no title to check."
+            exit 0
+          fi
+          # type(scope)!: description   (see CONTRIBUTING.md)
+          re='^(feat|fix|perf|refactor|docs|test|build|ci|chore)(\([a-z0-9][a-z0-9._/-]*\))?!?: [^ ].*[^.]$'
+          if [[ ! "$TITLE" =~ $re ]]; then
+            echo "::error title=PR title::'$TITLE' is not a Conventional Commit title. Use 'type(scope)!: description' with type one of feat, fix, perf, refactor, docs, test, build, ci, chore; lower-case scope (optional); no trailing period. Example: 'fix(updater): retry downloads after a timeout'."
+            exit 1
+          fi
+          if [ "${#TITLE}" -gt 100 ]; then
+            echo "::error title=PR title::The title is ${#TITLE} characters; keep it at 100 or fewer."
+            exit 1
+          fi
+          echo "PR title OK: $TITLE"
+
+  publish-smoke:
+    name: Publish smoke (${{ matrix.rid }})
+    needs: build-test
+    # Not a required check: skipped for PR metadata events (title/label changes).
+    if: github.event_name != 'pull_request' || contains(fromJSON('["opened", "synchronize", "reopened", "ready_for_review"]'), github.event.action)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [win-x64, win-arm64, win-x86]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Publish app (self-contained, ReadyToRun)
+        run: dotnet publish src/NetSpider.App/NetSpider.App.csproj -c Release -r ${{ matrix.rid }} -o publish/${{ matrix.rid }}
+
+      - name: Publish probe
+        run: dotnet publish src/NetSpider.Probe/NetSpider.Probe.csproj -c Release -r ${{ matrix.rid }} -o publish/probe-${{ matrix.rid }}
+
+      - name: Check output
+        shell: pwsh
+        run: |
+          $dir = "publish/${{ matrix.rid }}"
+          foreach ($f in 'NetSpider.exe', 'libSkiaSharp.dll', 'libHarfBuzzSharp.dll', 'e_sqlite3.dll', 'THIRD-PARTY-NOTICES.txt') {
+            if (-not (Test-Path (Join-Path $dir $f))) { throw "missing $f in $dir" }
+          }
+          $fs = [IO.File]::OpenRead((Join-Path $dir 'NetSpider.exe')); $br = New-Object IO.BinaryReader($fs)
+          $fs.Position = 0x3C; $pe = $br.ReadInt32(); $fs.Position = $pe + 4; $machine = $br.ReadUInt16(); $fs.Dispose()
+          $expected = @{ 'win-x64' = 0x8664; 'win-arm64' = 0xAA64; 'win-x86' = 0x14C }['${{ matrix.rid }}']
+          if ($machine -ne $expected) { throw ('PE machine 0x{0:X} != expected 0x{1:X}' -f $machine, $expected) }
+          (Get-Item (Join-Path $dir 'NetSpider.exe')).VersionInfo | Format-List ProductVersion, FileVersion, ProductName, CompanyName

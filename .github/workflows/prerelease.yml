@@ -1,0 +1,102 @@
+name: Pre-release
+
+# Pre-release channel, fully automatic: every push to main (a merged PR) with entries under [Unreleased] in
+# CHANGELOG.md becomes a pre-release:
+#   1. ChangelogTool prerelease-version → <next>-pre.<n>  (next = version computed from [Unreleased], n = commits since
+#      the last vX.Y.Z release tag)
+#   2. tag v<version> on the pushed commit (GITHUB_TOKEN; tags aren't protected)
+#   3. publish.yml, Pre-release channel; the release notes are [Unreleased] (build/release.ps1 → notes --unreleased)
+# Skipped: release commits ("chore(release): vX.Y.Z", published by publish-release.yml) and an empty [Unreleased].
+# Tags pushed with GITHUB_TOKEN don't start other workflows, so publish.yml is called directly from here.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: prerelease-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  prepare:
+    name: Tag pre-release
+    if: "github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'chore(release): v')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the tag
+    outputs:
+      publish: ${{ steps.plan.outputs.publish }}
+      version: ${{ steps.plan.outputs.version }}
+      sha: ${{ steps.plan.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tags + commit count
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Compute version
+        id: plan
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then echo "::error::Pre-releases are built from main only (this run is on $GITHUB_REF)."; exit 1; fi
+          dotnet build tools/ChangelogTool -c Release -nologo -v q
+          cl() { dotnet run --project tools/ChangelogTool -c Release --no-build -- "$@"; }
+          cl validate CHANGELOG.md
+          cl info | tee "$RUNNER_TEMP/info.txt"
+          entries=$(grep '^unreleased_entries=' "$RUNNER_TEMP/info.txt" | cut -d= -f2)
+          version=$(grep '^prerelease_version=' "$RUNNER_TEMP/info.txt" | cut -d= -f2)
+          echo "sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          if [ "$entries" = "0" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### No pre-release"
+              echo "[Unreleased] in CHANGELOG.md is empty, so this commit has nothing new for users. Nothing was tagged or published."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::[Unreleased] is empty: no pre-release."
+            exit 0
+          fi
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Pre-release v$version"
+            echo
+            cl notes --unreleased
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create and push tag
+        if: steps.plan.outputs.publish == 'true'
+        shell: bash
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          tag="v$VERSION"
+          if git rev-parse -q --verify "refs/tags/$tag" > /dev/null; then
+            if [ "$(git rev-list -n 1 "$tag")" != "$GITHUB_SHA" ]; then echo "::error::$tag already exists on another commit."; exit 1; fi
+            echo "$tag already points at $GITHUB_SHA (re-run): publishing again."
+            exit 0
+          fi
+          git tag "$tag" "$GITHUB_SHA"
+          git push origin "refs/tags/$tag"
+
+  publish:
+    name: Publish pre-release
+    needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+      channel: prerelease
+      ref: ${{ needs.prepare.outputs.sha }}

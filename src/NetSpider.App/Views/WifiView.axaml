@@ -1,0 +1,211 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NetSpider.App.ViewModels"
+             xmlns:c="using:NetSpider.App.Controls"
+             x:Class="NetSpider.App.Views.WifiView"
+             x:DataType="vm:WifiViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="18,14,22,18" Spacing="14">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock Text="Wi-Fi" Classes="h1" />
+          <TextBlock Text="{Binding Status}" Classes="caption" />
+        </StackPanel>
+        <Button Grid.Column="1" Classes="accent" Command="{Binding ScanCommand}" ToolTip.Tip="{Binding ScanTooltip}" ToolTip.ShowOnDisabled="True" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="7"><Path Classes="icon" Data="{StaticResource IconWifi}" Width="14" /><TextBlock Text="Scan" /></StackPanel>
+        </Button>
+      </Grid>
+
+      <!-- ================= link diagnostics ================= -->
+      <TextBlock Text="LINK DIAGNOSTICS" Classes="section" Margin="0,2,0,-6" />
+      <Border Classes="card" IsVisible="{Binding Link.ShowEmpty}">
+        <Grid ColumnDefinitions="Auto,*">
+          <Path Classes="icon" Data="{StaticResource IconWifi}" Stroke="{StaticResource TextDimBrush}" Width="30" Height="30" Margin="4,0,16,0" />
+          <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+            <TextBlock Text="{Binding Link.EmptyTitle}" FontSize="15" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Link.EmptyText}" Classes="dim" TextWrapping="Wrap" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Grid ColumnDefinitions="330,*" IsVisible="{Binding Link.Connected}">
+        <!-- this host's link -->
+        <Border Classes="card glow" Margin="0,0,7,0">
+          <StackPanel Spacing="6">
+            <TextBlock Text="THIS PC'S LINK" Classes="section" Margin="0" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="{Binding Link.Ssid}" FontSize="20" FontWeight="SemiBold" />
+              <Border Classes="badge" Background="#1A00E5FF" BorderBrush="#5500E5FF">
+                <TextBlock Text="{Binding Link.Channel}" Foreground="{StaticResource CyanBrush}" />
+              </Border>
+            </StackPanel>
+            <TextBlock Classes="caption mono"><Run Text="{Binding Link.Bssid}" /><Run Text="  " /><Run Text="{Binding Link.ApName}" Foreground="#7FEFFF" /></TextBlock>
+            <c:Gauge Height="150" Value="{Binding Link.RssiGauge}" Maximum="70" HighIsGood="True" Text="{Binding Link.RssiText}" Caption="{Binding Link.Quality}" Thickness="12" Margin="0,4" />
+            <Grid ColumnDefinitions="*,*,*">
+              <StackPanel><TextBlock Text="TX RATE" Classes="caption" /><TextBlock Text="{Binding Link.TxRate}" FontWeight="SemiBold" FontSize="14" /></StackPanel>
+              <StackPanel Grid.Column="1"><TextBlock Text="RX RATE" Classes="caption" /><TextBlock Text="{Binding Link.RxRate}" FontWeight="SemiBold" FontSize="14" /></StackPanel>
+              <StackPanel Grid.Column="2"><TextBlock Text="PHY" Classes="caption" /><TextBlock Text="{Binding Link.Phy}" FontWeight="SemiBold" FontSize="14" /></StackPanel>
+            </Grid>
+            <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+              <StackPanel><TextBlock Text="AP (RADIO HOP)" Classes="caption" /><TextBlock Text="{Binding Link.ApRtt}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource MagentaBrush}" /></StackPanel>
+              <StackPanel Grid.Column="1"><TextBlock Text="GATEWAY" Classes="caption" /><TextBlock Text="{Binding Link.GwRtt}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource GreenBrush}" /></StackPanel>
+            </Grid>
+            <TextBlock Text="{Binding Link.HopSplit}" Foreground="{Binding Link.HopSplitBrush}" TextWrapping="Wrap" FontSize="12" Margin="0,4,0,0" />
+          </StackPanel>
+        </Border>
+        <!-- charts -->
+        <StackPanel Grid.Column="1" Margin="7,0,0,0" Spacing="14">
+          <Border Classes="card" Padding="16,10">
+            <StackPanel>
+              <TextBlock Text="SIGNAL (RSSI)" Classes="section" Margin="0" />
+              <c:TimeSeriesChart Height="150" Series="{Binding Link.RssiSeries}" Stacked="False" Unit="dBm" Seconds="300" Floor="-95" />
+            </StackPanel>
+          </Border>
+          <Border Classes="card" Padding="16,10">
+            <StackPanel>
+              <TextBlock Text="AP RTT VS GATEWAY RTT — RADIO HOP VS BACKHAUL" Classes="section" Margin="0" />
+              <c:TimeSeriesChart Height="150" Series="{Binding Link.RttSeries}" Stacked="False" Unit="ms" Seconds="300" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
+
+      <Grid ColumnDefinitions="*,*">
+        <!-- events -->
+        <Border Classes="card" Margin="0,0,7,0">
+          <StackPanel>
+            <TextBlock Text="WI-FI EVENTS" Classes="section" Margin="0,0,0,8" />
+            <TextBlock Text="No roams, disconnects or authentication failures recorded." Classes="dim" IsVisible="{Binding !Link.HasEvents}" />
+            <ItemsControl ItemsSource="{Binding Link.Events}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:WifiEventRow">
+                  <Grid ColumnDefinitions="64,24,*" Margin="0,3">
+                    <StackPanel>
+                      <TextBlock Text="{Binding Time}" Classes="mono" FontSize="11.5" />
+                      <TextBlock Text="{Binding Date}" Classes="caption" />
+                    </StackPanel>
+                    <Path Grid.Column="1" Classes="icon" Data="{Binding Icon}" Stroke="{Binding Brush}" Width="14" Height="14" VerticalAlignment="Top" Margin="0,2,0,0" />
+                    <StackPanel Grid.Column="2" Margin="6,0,0,0">
+                      <TextBlock Text="{Binding Kind}" Foreground="{Binding Brush}" FontWeight="SemiBold" FontSize="12.5" />
+                      <TextBlock Text="{Binding Detail}" Classes="dim" FontSize="12" TextWrapping="Wrap" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <!-- per-AP health -->
+        <Border Grid.Column="1" Classes="card" Margin="7,0,0,0">
+          <StackPanel>
+            <TextBlock Text="ACCESS POINT HEALTH" Classes="section" Margin="0,0,0,2" />
+            <TextBlock Text="Management IP plus reachability of each AP's wireless clients, probed from this PC." Classes="caption" Margin="0,0,0,8" />
+            <TextBlock Text="{Binding Link.ApEmptyText}" Classes="dim" TextWrapping="Wrap" IsVisible="{Binding !Link.HasAps}" />
+            <ItemsControl ItemsSource="{Binding Link.Aps}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ApCardRow">
+                  <Border Padding="12,10" Margin="0,0,0,8" CornerRadius="10" Background="#0A1020" BorderBrush="{Binding Border}" BorderThickness="1">
+                    <StackPanel Spacing="6">
+                      <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Path Classes="icon" Data="{StaticResource IconWifi}" Stroke="{Binding HealthBrush}" Width="16" Height="16" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0">
+                          <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" />
+                          <TextBlock Text="{Binding Ip}" Classes="caption mono" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Border Grid.Column="2" Classes="badge" BorderBrush="{Binding HealthBrush}">
+                          <TextBlock Text="{Binding Health}" Foreground="{Binding HealthBrush}" />
+                        </Border>
+                      </Grid>
+                      <Grid ColumnDefinitions="*,Auto,Auto">
+                        <StackPanel Spacing="4">
+                          <TextBlock Text="{Binding Mgmt}" Foreground="{Binding MgmtBrush}" FontSize="12" />
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <c:MeterBar Width="120" Height="6" Fraction="{Binding ClientFraction}" BarBrush="{Binding ClientBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Clients}" FontSize="12" VerticalAlignment="Center" />
+                          </StackPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="16,0" HorizontalAlignment="Right">
+                          <TextBlock Text="CLIENT RTT" Classes="caption" HorizontalAlignment="Right" />
+                          <TextBlock Text="{Binding ClientRtt}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                          <TextBlock Text="LOSS" Classes="caption" HorizontalAlignment="Right" />
+                          <TextBlock Text="{Binding Loss}" Foreground="{Binding LossBrush}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                        </StackPanel>
+                      </Grid>
+                      <TextBlock Text="{Binding Diagnosis}" Foreground="{Binding DiagnosisBrush}" TextWrapping="Wrap" FontSize="12" IsVisible="{Binding HasDiagnosis}" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <TextBlock Text="NEARBY NETWORKS" Classes="section" Margin="0,6,0,-6" />
+      <TextBlock IsVisible="{Binding IsEmpty}" Text="No Wi-Fi networks yet — press Scan (needs a wireless adapter) or enable the demo network." Classes="dim" HorizontalAlignment="Center" Margin="0,30" />
+
+      <Grid ColumnDefinitions="*,*" IsVisible="{Binding !IsEmpty}">
+        <Border Classes="card" Padding="8" Margin="0,0,7,0">
+          <c:ChannelChart Height="230" Networks="{Binding All}" Band="2.4 GHz" />
+        </Border>
+        <Border Grid.Column="1" Classes="card" Padding="8" Margin="7,0,0,0">
+          <c:ChannelChart Height="230" Networks="{Binding All}" Band="5 GHz" />
+        </Border>
+      </Grid>
+      <Border Classes="card" Padding="8" IsVisible="{Binding !IsEmpty}">
+        <c:ChannelChart Height="170" Networks="{Binding All}" Band="6 GHz" />
+      </Border>
+
+      <Border Classes="card" Padding="0" IsVisible="{Binding !IsEmpty}">
+        <DataGrid ItemsSource="{Binding Networks}" IsReadOnly="True" CanUserSortColumns="True" HeadersVisibility="Column" RowHeight="34" MaxHeight="520">
+          <DataGrid.Columns>
+            <DataGridTemplateColumn Header="SSID" Width="2*" SortMemberPath="Ssid">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:WifiRow">
+                  <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="8,0">
+                    <Ellipse Width="9" Height="9" Fill="{Binding SsidBrush}" />
+                    <TextBlock Text="{Binding Ssid}" FontWeight="SemiBold" />
+                    <Border IsVisible="{Binding Connected}" Background="#3300E5FF" BorderBrush="{StaticResource CyanBrush}" BorderThickness="1" CornerRadius="6" Padding="5,0">
+                      <TextBlock Text="CONNECTED" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource CyanBrush}" />
+                    </Border>
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Header="BSSID" Width="150" SortMemberPath="Bssid">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:WifiRow">
+                  <TextBlock Text="{Binding Bssid}" Classes="mono" Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center" Margin="8,0" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn Header="Vendor" Binding="{Binding Vendor}" Width="1.2*" />
+            <DataGridTextColumn Header="Ch" Binding="{Binding Channel}" Width="56" />
+            <DataGridTextColumn Header="Band" Binding="{Binding Band}" Width="80" />
+            <DataGridTemplateColumn Header="Signal" Width="130" SortMemberPath="Rssi">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:WifiRow">
+                  <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="8,0">
+                    <c:SignalBars Width="22" Height="14" Rssi="{Binding Rssi}" />
+                    <TextBlock Text="{Binding RssiText}" FontSize="12" />
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Header="Security" Width="120" SortMemberPath="Security">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate x:DataType="vm:WifiRow">
+                  <TextBlock Text="{Binding Security}" Foreground="{Binding SecurityBrush}" VerticalAlignment="Center" Margin="8,0" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn Header="PHY" Binding="{Binding Phy}" Width="90" />
+            <DataGridTextColumn Header="Width" Binding="{Binding Width}" Width="80" />
+          </DataGrid.Columns>
+        </DataGrid>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
