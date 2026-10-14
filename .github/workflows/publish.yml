@@ -97,15 +97,15 @@ jobs:
     needs: version
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.version.outputs.ref }}
           fetch-depth: 0 # MinVer
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - run: dotnet test NetworkScan.slnx -c Release --logger trx --results-directory TestResults
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results
@@ -123,12 +123,12 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.version.outputs.ref }}
           fetch-depth: 0 # MinVer + the git-log fallback for release notes need full history and tags
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
@@ -144,7 +144,7 @@ jobs:
       #       release.ps1 call. vpk then signs NetSpider.exe + all binaries, Update.exe and Setup.exe.
       #       (MSI/probe signing with Trusted Signing: signtool /dlib Azure.CodeSigning.Dlib.dll /dmdf <metadata.json>.)
       #
-      # - uses: azure/login@v2
+      # - uses: azure/login@v3
       #   with:
       #     client-id: ${{ secrets.AZURE_CLIENT_ID }}
       #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -179,7 +179,7 @@ jobs:
         # notes --unreleased for a pre-release), so the updater shows exactly the changelog section.
         run: ./build/release.ps1 -Version $env:VERSION -Channel $env:CHANNEL -Rids $env:RID -SkipTests -Deltas always
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.rid }}
           path: artifacts/${{ env.VERSION }}/
@@ -195,16 +195,16 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.version.outputs.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: release-*
           path: artifacts/${{ env.VERSION }}

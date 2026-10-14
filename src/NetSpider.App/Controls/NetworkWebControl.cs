@@ -78,8 +78,8 @@ public sealed class NetworkWebControl : Control
     public NetworkWebControl()
     {
         GestureRecognizers.Add(new PinchGestureRecognizer());
-        AddHandler(Gestures.PinchEvent, OnPinch);
-        AddHandler(Gestures.PinchEndedEvent, (_, _) => _lastPinch = 1);
+        AddHandler(InputElement.PinchEvent, OnPinch);
+        AddHandler(InputElement.PinchEndedEvent, (_, _) => _lastPinch = 1);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
