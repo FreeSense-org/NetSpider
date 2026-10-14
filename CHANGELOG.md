@@ -6,6 +6,10 @@ Version numbers are computed from this file, so every pull request that changes 
 
 ## [Unreleased]
 
+### Fixed
+
+- NetSpider is licensed under the Apache License 2.0, as intended, instead of MIT. The installer and the About dialog show the new license.
+
 ## [1.0.0] - 2026-10-05
 
 ### New
