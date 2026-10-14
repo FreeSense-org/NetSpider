@@ -6,6 +6,10 @@ Version numbers are computed from this file, so every pull request that changes 
 
 ## [Unreleased]
 
+### Improved
+
+- NetSpider runs on Avalonia 12 and up-to-date libraries, including SkiaSharp 3.119, Svg.Skia 5.1 and the .NET 10.0.13 runtime libraries.
+
 ## [1.0.1] - 2026-10-14
 
 ### Fixed

@@ -43,7 +43,7 @@ jobs:
       version: ${{ steps.find.outputs.version }}
       sha: ${{ steps.find.outputs.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
@@ -77,7 +77,7 @@ jobs:
           { echo "publish=true"; echo "version=$version"; echo "sha=$sha"; } >> "$GITHUB_OUTPUT"
           echo "Release commit $sha: v$version"
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         if: steps.find.outputs.publish == 'true'
         with:
           dotnet-version: '10.0.x'

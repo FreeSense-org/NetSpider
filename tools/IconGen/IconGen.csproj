@@ -7,7 +7,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <!-- Same versions Avalonia.Svg.Skia 11.3.0 pulls into the app. -->
+    <!-- Same versions as the app (Directory.Packages.props). -->
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="Svg.Skia" />
   </ItemGroup>
