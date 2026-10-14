@@ -194,7 +194,7 @@ public sealed partial class AboutWindowViewModel : ObservableObject
             var path = Path.Combine(AppContext.BaseDirectory, "LICENSE");
             if (File.Exists(path)) text = File.ReadAllText(path);
         }
-        return text ?? "MIT License — see " + AppInfo.Repository + "/blob/main/LICENSE";
+        return text ?? "Apache License 2.0 — see " + AppInfo.Repository + "/blob/main/LICENSE";
     }
 
     private static string ReadNotices()
