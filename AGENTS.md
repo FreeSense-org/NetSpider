@@ -8,7 +8,7 @@ These rules are not optional. `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instruc
 
 **FreeSense NetSpider** is a Windows network diagnostics app (Layer 2 and Layer 3): device discovery and
 identification, MAC- and IP-level latency, Path Doctor (where does it break?), Storm Center, Wi-Fi ↔ LAN diagnostics,
-a built-in updater and installers. C# / .NET 10 / Avalonia 11.3, MIT licensed, public repository
+a built-in updater and installers. C# / .NET 10 / Avalonia 11.3, Apache-2.0 licensed, public repository
 `FreeSense-org/NetSpider`.
 
 | Path | What |

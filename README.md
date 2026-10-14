@@ -138,4 +138,4 @@ dotnet publish src/NetSpider.Probe -c Release -r linux-arm64 --self-contained -p
 - **Unmanaged switches.** They have no IP, so NetSpider infers them and judges them through the devices behind them.
 
 ## License
-[MIT](LICENSE) © FreeSense.org
+[Apache-2.0](LICENSE) © FreeSense.org

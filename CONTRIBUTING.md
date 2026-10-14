@@ -1,6 +1,6 @@
 # Contributing to NetSpider
 
-Thanks for helping! NetSpider is a [FreeSense](https://freesense.org) project, MIT licensed. This page covers how
+Thanks for helping! NetSpider is a [FreeSense](https://freesense.org) project, Apache-2.0 licensed. This page covers how
 changes get into `main`. For the code layout and conventions, see [AGENTS.md](AGENTS.md); it applies to people too.
 
 ## The short version
