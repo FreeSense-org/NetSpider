@@ -8,7 +8,7 @@ Version numbers are computed from this file, so every pull request that changes 
 
 ### Fixed
 
-- A Path Doctor incident that has cleared is saved as closed. Before, it could be saved as still ongoing and show up open again after a restart.
+- The Path Doctor incident history keeps the real end time of a cleared incident. Before, an incident could be saved without its end and show a duration of zero after a restart.
 - NetSpider is licensed under the Apache License 2.0, as intended, instead of MIT. The installer and the About dialog show the new license.
 
 ## [1.0.0] - 2026-10-05
