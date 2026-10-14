@@ -31,6 +31,8 @@ public sealed class IncidentService : IIncidentService, IStartable, IDisposable
     private readonly IIncidentRepository? _repo;
     private readonly TimeProvider _time;
     private readonly object _sync = new();
+    private readonly object _saveSync = new();
+    private Task _saves = Task.CompletedTask;
     private readonly List<DiagnosticSignal> _history = new();
     private readonly Dictionary<Mac, DeviceState> _states = new();
     private readonly Dictionary<Mac, DateTimeOffset> _offlineSince = new();
@@ -267,11 +269,14 @@ public sealed class IncidentService : IIncidentService, IStartable, IDisposable
     private void Persist(Incident inc)
     {
         if (_repo is null) return;
-        _ = Task.Run(async () =>
-        {
-            try { await _repo.SaveIncidentAsync(inc).ConfigureAwait(false); }
-            catch (Exception ex) { _log.LogWarning(ex, "Saving incident failed"); }
-        });
+        // Saves run one after another: concurrent saves could land out of order, so an incident's
+        // "open" state could overwrite its later "closed" state in the repository.
+        lock (_saveSync)
+            _saves = _saves.ContinueWith(async _ =>
+            {
+                try { await _repo.SaveIncidentAsync(inc).ConfigureAwait(false); }
+                catch (Exception ex) { _log.LogWarning(ex, "Saving incident failed"); }
+            }, CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default).Unwrap();
     }
 
     private static bool SameContent(Incident a, Incident b) =>
