@@ -6,6 +6,8 @@ Version numbers are computed from this file, so every pull request that changes 
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-14
+
 ### Fixed
 
 - The Path Doctor incident history keeps the real end time of a cleared incident. Before, an incident could be saved without its end and show a duration of zero after a restart.
