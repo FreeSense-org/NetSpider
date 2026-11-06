@@ -5,10 +5,13 @@ namespace NetSpider.Fingerprint.Logos;
 
 public sealed record VendorEntry(
     [property: JsonPropertyName("brand")] string Brand,
-    [property: JsonPropertyName("domain")] string Domain,
     [property: JsonPropertyName("aliases")] IReadOnlyList<string>? Aliases);
 
-/// <summary>Embedded brand → homepage-domain map (Data/vendors.json) with alias matching.</summary>
+/// <summary>
+/// The embedded list of brands with a logo (Data/vendors.json, images in Data/Logos), with alias matching. Logos are
+/// reviewed and shipped because a logo looked up from a company's name can belong to anyone: LCFC, a Lenovo subsidiary,
+/// is also lcfc.com, a football club.
+/// </summary>
 public sealed class VendorCatalog
 {
     private readonly Dictionary<string, VendorEntry> _byKey = new(StringComparer.OrdinalIgnoreCase);
@@ -41,21 +44,5 @@ public sealed class VendorCatalog
         if (_byKey.TryGetValue(BrandNormalizer.Key(brand), out var e)) return e;
         var norm = BrandNormalizer.Normalize(brand);
         return norm is not null && _byKey.TryGetValue(BrandNormalizer.Key(norm), out e) ? e : null;
-    }
-
-    /// <summary>Candidate homepage domains: the mapped domain, or guesses derived from the brand name.</summary>
-    public IReadOnlyList<string> CandidateDomains(string brand)
-    {
-        if (Find(brand) is { } e) return [e.Domain];
-        var norm = BrandNormalizer.Normalize(brand) ?? brand;
-        var stem = new string(norm.ToLowerInvariant().Where(char.IsAsciiLetterOrDigit).ToArray());
-        if (stem.Length < 2) return [];
-        var dashed = BrandNormalizer.Key(norm);
-        var list = new List<string> { stem + ".com" };
-        if (dashed != stem && dashed.Length > 0) list.Add(dashed + ".com");
-        list.Add(stem + ".net");
-        list.Add(stem + ".de");
-        list.Add(stem + ".co.uk");
-        return list;
     }
 }

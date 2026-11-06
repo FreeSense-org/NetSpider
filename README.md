@@ -51,7 +51,7 @@ Other notes:
 - ARP and IPv6 neighbor-discovery sweeps with real L2 round-trip times, taken from Npcap high-precision timestamps.
 - Every common discovery protocol: LLDP (802.1/802.3/MED), CDP, STP/RSTP/MSTP/PVST+, DHCP fingerprinting, mDNS/DNS-SD, SSDP/UPnP, WS-Discovery/ONVIF, NetBIOS/LLMNR, SMB2/3 (operating system and domain), SNMP v1/v2c/v3, TLS certificate inspection and port scanning with banner grabbing.
 - Vendor-specific protocols: Ubiquiti, MikroTik MNDP, Netgear NSDP, plus Sonos, Hue, Chromecast, Shelly, Tasmota, Fritz!Box, Plex and Home Assistant APIs, MQTT and CoAP.
-- An offline IEEE MAC-vendor database, an evidence-based classifier with about 170 brand rules, and brand logos scraped from vendor websites.
+- An offline IEEE MAC-vendor database, an evidence-based classifier with about 170 brand rules, and brand logos for about 300 vendors built in.
 - Other subnets and VLANs: found through the route table, DHCP option 121, traceroute, SNMP and tagged DHCP probes.
 - Nearby Wi-Fi networks: SSIDs, channels and signal strength.
 
@@ -125,7 +125,7 @@ dotnet publish src/NetSpider.Probe -c Release -r linux-arm64 --self-contained -p
 | `NetSpider.Core` | Models, contracts, in-memory stores, frame builder |
 | `NetSpider.Capture` | Npcap capture and injection, traffic counters, pcapng writer and recorder |
 | `NetSpider.Discovery` | L2/L3 sweeps and parsers, service and vendor probes, SNMP (incl. port counters), gateway audit |
-| `NetSpider.Fingerprint` | MAC-vendor database, classifier, vendor-logo scraper |
+| `NetSpider.Fingerprint` | MAC-vendor database, classifier, vendor logos |
 | `NetSpider.Diagnostics` | Orchestrator, latency engine, topology, anomaly engine, Path Doctor and incidents, Storm Center, AP health, internet monitor, probe-agent hub, dual-interface self-test |
 | `NetSpider.Wifi` | Native WLAN API scanner and link monitor |
 | `NetSpider.Export` | SQLite history and incidents, exporters, notifiers |
