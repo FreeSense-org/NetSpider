@@ -33,7 +33,7 @@
           </StackPanel>
         </Border>
 
-        <TextBox Grid.Column="1" Width="250" Margin="10,0" Text="{Binding SearchText}" Watermark="Search name, IP, MAC, vendor…" VerticalAlignment="Center">
+        <TextBox Grid.Column="1" Width="250" Margin="10,0" Text="{Binding SearchText}" PlaceholderText="Search name, IP, MAC, vendor…" VerticalAlignment="Center">
           <TextBox.InnerLeftContent>
             <Path Classes="icon" Data="{StaticResource IconSearch}" Stroke="{StaticResource TextDimBrush}" Width="13" Margin="8,0,0,0" />
           </TextBox.InnerLeftContent>

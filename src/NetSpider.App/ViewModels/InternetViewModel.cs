@@ -91,8 +91,8 @@ public sealed partial class InternetViewModel : ObservableObject
 
     private void LoadTargets()
     {
-        _enabled = S.InternetMonitorEnabled;
-        _interval = S.InternetIntervalSeconds;
+        Enabled = S.InternetMonitorEnabled;
+        Interval = S.InternetIntervalSeconds;
         EditTargets.Clear();
         foreach (var t in S.InternetTargets) EditTargets.Add(new EditableTarget { Name = t.Name, Host = t.Host, Enabled = t.Enabled });
     }

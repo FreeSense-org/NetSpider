@@ -155,7 +155,7 @@
               <CheckBox IsChecked="{Binding Settings.IgmpQuery}" Content="IGMP / MLD general query" Width="250" />
             </WrapPanel>
             <StackPanel Classes="row"><TextBlock Classes="label" Text="Port scan profile" /><ComboBox ItemsSource="{Binding PortScanProfiles}" SelectedItem="{Binding Settings.PortScan}" Width="160" /></StackPanel>
-            <StackPanel Classes="row"><TextBlock Classes="label" Text="Extra ports" /><TextBox Text="{Binding Settings.ExtraPorts}" Width="300" Watermark="e.g. 8000-8100,9999" /></StackPanel>
+            <StackPanel Classes="row"><TextBlock Classes="label" Text="Extra ports" /><TextBox Text="{Binding Settings.ExtraPorts}" Width="300" PlaceholderText="e.g. 8000-8100,9999" /></StackPanel>
             <StackPanel Classes="row"><TextBlock Classes="label" Text="Largest subnet to sweep (/prefix)" /><NumericUpDown Value="{Binding MinSweepPrefix}" Minimum="8" Maximum="30" Increment="1" FormatString="0" /></StackPanel>
             <StackPanel Classes="row"><TextBlock Classes="label" Text="Max injected packets / s" /><NumericUpDown Value="{Binding MaxInjectPps}" Minimum="10" Maximum="20000" Increment="50" FormatString="0" /></StackPanel>
           </StackPanel>
@@ -236,7 +236,7 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBox Text="{Binding NewCommunity}" Width="200" Watermark="Add community…" />
+              <TextBox Text="{Binding NewCommunity}" Width="200" PlaceholderText="Add community…" />
               <Button Classes="ghost" Command="{Binding AddCommunityCommand}" Content="Add" />
             </StackPanel>
             <TextBlock Text="SNMPv3" Classes="caption" Margin="0,12,0,4" />
@@ -430,9 +430,9 @@
                 <DataTemplate x:DataType="vm:WebhookItem">
                   <Grid ColumnDefinitions="Auto,160,120,*,Auto" Margin="0,3">
                     <CheckBox IsChecked="{Binding Enabled}" />
-                    <TextBox Grid.Column="1" Text="{Binding Name}" Watermark="Name" Margin="4,0" />
+                    <TextBox Grid.Column="1" Text="{Binding Name}" PlaceholderText="Name" Margin="4,0" />
                     <ComboBox Grid.Column="2" ItemsSource="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).WebhookKinds}" SelectedItem="{Binding Kind}" Margin="4,0" HorizontalAlignment="Stretch" />
-                    <TextBox Grid.Column="3" Text="{Binding Url}" Watermark="https://…" Margin="4,0" />
+                    <TextBox Grid.Column="3" Text="{Binding Url}" PlaceholderText="https://…" Margin="4,0" />
                     <Button Grid.Column="4" Classes="icon" Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).RemoveWebhookCommand}" CommandParameter="{Binding}">
                       <Path Classes="icon" Data="{StaticResource IconClose}" Width="11" />
                     </Button>
@@ -442,7 +442,7 @@
             </ItemsControl>
             <Button Classes="ghost" Command="{Binding AddWebhookCommand}" Content="+ Add webhook" Margin="0,6,0,0" />
             <StackPanel Classes="row" Margin="0,12,0,0"><TextBlock Classes="label" Text="Syslog server : port" />
-              <TextBox Text="{Binding Settings.SyslogServer}" Width="220" Watermark="host or IP" />
+              <TextBox Text="{Binding Settings.SyslogServer}" Width="220" PlaceholderText="host or IP" />
               <NumericUpDown Value="{Binding SyslogPort}" Minimum="1" Maximum="65535" FormatString="0" Margin="8,0,0,0" Width="120" /></StackPanel>
           </StackPanel>
         </Border>
