@@ -13,7 +13,7 @@
           <TextBlock Text="{Binding InfoCount, StringFormat='{}{0} info'}" Foreground="{StaticResource CyanBrush}" FontSize="12" />
         </StackPanel>
       </StackPanel>
-      <TextBox Grid.Column="2" Width="260" Text="{Binding SearchText}" Watermark="Filter alerts…" VerticalAlignment="Center" Margin="0,0,8,0" />
+      <TextBox Grid.Column="2" Width="260" Text="{Binding SearchText}" PlaceholderText="Filter alerts…" VerticalAlignment="Center" Margin="0,0,8,0" />
       <ComboBox Grid.Column="3" ItemsSource="{Binding Filters}" SelectedItem="{Binding SelectedFilter}" Width="150" VerticalAlignment="Center" Margin="0,0,8,0" />
       <Button Grid.Column="4" Classes="danger" Command="{Binding ClearCommand}" Content="Clear" VerticalAlignment="Center" />
     </Grid>

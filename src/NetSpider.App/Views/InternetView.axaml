@@ -105,8 +105,8 @@
               <DataTemplate x:DataType="vm:EditableTarget">
                 <Grid ColumnDefinitions="Auto,220,*,Auto" Margin="0,3">
                   <CheckBox IsChecked="{Binding Enabled}" VerticalAlignment="Center" ToolTip.Tip="Include this target" />
-                  <TextBox Grid.Column="1" Text="{Binding Name}" Watermark="Name" Margin="6,0" />
-                  <TextBox Grid.Column="2" Text="{Binding Host}" Watermark="IP address or host name" Classes="mono" Margin="0,0,6,0" />
+                  <TextBox Grid.Column="1" Text="{Binding Name}" PlaceholderText="Name" Margin="6,0" />
+                  <TextBox Grid.Column="2" Text="{Binding Host}" PlaceholderText="IP address or host name" Classes="mono" Margin="0,0,6,0" />
                   <Button Grid.Column="3" Classes="icon" ToolTip.Tip="Remove target"
                           Command="{Binding $parent[UserControl].((vm:InternetViewModel)DataContext).RemoveTargetCommand}" CommandParameter="{Binding}">
                     <Path Classes="icon" Data="{StaticResource IconClose}" Width="11" />
@@ -117,8 +117,8 @@
           </ItemsControl>
           <Grid ColumnDefinitions="Auto,220,*,Auto" Margin="0,4,0,0">
             <TextBlock Text="+" FontSize="18" Classes="dim" VerticalAlignment="Center" Margin="6,0,10,0" />
-            <TextBox Grid.Column="1" Text="{Binding NewName}" Watermark="Name (optional)" Margin="6,0" />
-            <TextBox Grid.Column="2" Text="{Binding NewHost}" Watermark="e.g. 1.1.1.1, google.com, your ISP gateway" Classes="mono" Margin="0,0,6,0" />
+            <TextBox Grid.Column="1" Text="{Binding NewName}" PlaceholderText="Name (optional)" Margin="6,0" />
+            <TextBox Grid.Column="2" Text="{Binding NewHost}" PlaceholderText="e.g. 1.1.1.1, google.com, your ISP gateway" Classes="mono" Margin="0,0,6,0" />
             <Button Grid.Column="3" Classes="ghost" Command="{Binding AddTargetCommand}" Content="Add target" />
           </Grid>
           <TextBlock Text="{Binding Message}" Classes="dim" IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" />

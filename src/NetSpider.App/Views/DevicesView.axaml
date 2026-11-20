@@ -10,7 +10,7 @@
         <TextBlock Text="Devices" Classes="h1" />
         <TextBlock Text="{Binding Summary}" Classes="caption" />
       </StackPanel>
-      <TextBox Grid.Column="2" Width="320" Text="{Binding SearchText}" Watermark="Filter by name, IP, MAC, vendor, type…" VerticalAlignment="Center">
+      <TextBox Grid.Column="2" Width="320" Text="{Binding SearchText}" PlaceholderText="Filter by name, IP, MAC, vendor, type…" VerticalAlignment="Center">
         <TextBox.InnerLeftContent>
           <Path Classes="icon" Data="{StaticResource IconSearch}" Stroke="{StaticResource TextDimBrush}" Width="13" Margin="8,0,0,0" />
         </TextBox.InnerLeftContent>
