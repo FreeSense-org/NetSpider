@@ -6,6 +6,8 @@ Version numbers are computed from this file, so every pull request that changes 
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-11-20
+
 ### Improved
 
 - NetSpider runs on Avalonia 12.1.6 and updated test tooling, and search boxes use the current placeholder text style.
