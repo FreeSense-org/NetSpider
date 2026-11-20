@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
@@ -11,62 +12,62 @@ using NetSpider.Fingerprint.Logos;
 namespace NetSpider.Fingerprint;
 
 /// <summary>
-/// Resolves a logo image for a device: (1) the device's own SSDP icon, (2) a logo scraped from the vendor's homepage
-/// (domain from the embedded vendors.json, or guessed from the brand), (3) null so the UI draws a type glyph.
-/// Original bytes are cached as <c>Logos/&lt;brand-key&gt;.&lt;ext&gt;</c>; misses are remembered with a <c>.none</c>
-/// marker for 7 days. At most 4 fetches run concurrently.
+/// Resolves a logo image for a device: (1) the device's own SSDP icon from the LAN, (2) the brand's logo shipped with the
+/// app in Data/Logos, (3) null so the UI draws a type glyph. Logos are never looked up on the internet.
+/// Images are kept as files in <c>Logos/</c> because the renderers load them by path: brand logos are extracted as
+/// <c>&lt;brand-key&gt;.png</c>, device icons cached as <c>icon-&lt;hash&gt;.&lt;ext&gt;</c>, with failed icons remembered
+/// by a <c>.none</c> marker for 7 days.
 /// </summary>
 public sealed class VendorLogoService : ILogoProvider, IDisposable
 {
     public const string BrowserUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
     internal static readonly TimeSpan NegativeTtl = TimeSpan.FromDays(7);
+    private const string RevisionFile = "catalog.rev";
+    private const string BundledMarker = ".Data.Logos.";
+
+    private static readonly Assembly Asm = typeof(VendorLogoService).Assembly;
+
+    /// <summary>Brand key → embedded Data/Logos/&lt;brand-key&gt;.png.</summary>
+    private static readonly Dictionary<string, string> BundledLogos = Asm.GetManifestResourceNames()
+        .Where(n => n.Contains(BundledMarker, StringComparison.Ordinal) && n.EndsWith(".png", StringComparison.Ordinal))
+        .ToDictionary(n => n[(n.IndexOf(BundledMarker, StringComparison.Ordinal) + BundledMarker.Length)..^4], StringComparer.OrdinalIgnoreCase);
 
     private readonly ILogger<VendorLogoService> _log;
-    private readonly AppSettings _settings;
     private readonly string _cacheDir;
-    private readonly HttpClient _web;
     private readonly HttpClient _lan;
-    private readonly LogoScraper _scraper;
-    private readonly LogoScraper _lanScraper;
+    private readonly DeviceIconDownloader _icons;
+    private readonly object _extractLock = new();
     private readonly SemaphoreSlim _gate = new(4, 4);
     private readonly ConcurrentDictionary<string, Lazy<Task<string?>>> _inflight = new(StringComparer.OrdinalIgnoreCase);
 
-    public VendorLogoService(ILogger<VendorLogoService> log, AppSettings settings) : this(log, settings, null, null) { }
+    public VendorLogoService(ILogger<VendorLogoService> log) : this(log, null, null) { }
 
-    internal VendorLogoService(ILogger<VendorLogoService> log, AppSettings settings, string? cacheDir, HttpMessageHandler? handler)
+    internal VendorLogoService(ILogger<VendorLogoService> log, string? cacheDir, HttpMessageHandler? handler)
     {
         _log = log;
-        _settings = settings;
         _cacheDir = cacheDir ?? AppPaths.Logos;
         Directory.CreateDirectory(_cacheDir);
         Catalog = VendorCatalog.LoadEmbedded();
+        DiscardOutdatedBrandLogos();
 
-        _web = handler is null ? new HttpClient(CreateHandler(false), true) : new HttpClient(handler, false);
-        _lan = handler is null ? new HttpClient(CreateHandler(true), true) : new HttpClient(handler, false);
-        foreach (var c in new[] { _web, _lan })
-        {
-            c.Timeout = TimeSpan.FromSeconds(8);
-            c.DefaultRequestHeaders.UserAgent.ParseAdd(BrowserUserAgent);
-            c.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
-        }
-        _scraper = new LogoScraper(_web, log);
-        _lanScraper = new LogoScraper(_lan, log);
+        _lan = handler is null ? new HttpClient(CreateHandler(), true) : new HttpClient(handler, false);
+        _lan.Timeout = TimeSpan.FromSeconds(8);
+        _lan.DefaultRequestHeaders.UserAgent.ParseAdd(BrowserUserAgent);
+        _icons = new DeviceIconDownloader(_lan, log);
     }
 
-    private static SocketsHttpHandler CreateHandler(bool lan)
+    private static SocketsHttpHandler CreateHandler()
     {
         var h = new SocketsHttpHandler
         {
             AllowAutoRedirect = true,
             MaxAutomaticRedirections = 8,
             AutomaticDecompression = DecompressionMethods.All,
-            ConnectTimeout = TimeSpan.FromSeconds(lan ? 3 : 6),
+            ConnectTimeout = TimeSpan.FromSeconds(3),
             PooledConnectionLifetime = TimeSpan.FromMinutes(5),
-            UseCookies = true,
-            CookieContainer = new CookieContainer(),
         };
         // LAN devices (routers, NAS, ...) almost always use self-signed certificates for their icons.
-        if (lan) h.SslOptions.RemoteCertificateValidationCallback = (_, _, _, _) => true;
+        h.SslOptions.RemoteCertificateValidationCallback = (_, _, _, _) => true;
         return h;
     }
 
@@ -89,7 +90,7 @@ public sealed class VendorLogoService : ILogoProvider, IDisposable
 
             // 2. vendor logo
             var brand = device.Brand ?? device.OuiVendor;
-            return string.IsNullOrWhiteSpace(brand) ? null : await GetBrandLogoAsync(brand, ct).ConfigureAwait(false);
+            return string.IsNullOrWhiteSpace(brand) ? null : GetBrandLogo(brand);
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception ex)
@@ -99,44 +100,26 @@ public sealed class VendorLogoService : ILogoProvider, IDisposable
         }
     }
 
-    /// <summary>Returns the cached or freshly scraped logo for a brand (null when none / scraping disabled).</summary>
-    public async Task<string?> GetBrandLogoAsync(string brand, CancellationToken ct = default)
-    {
-        var key = KeyFor(brand);
-        if (key.Length == 0) return null;
-        if (FindCached(key) is { } cached) return cached;
-        if (!_settings.ScrapeVendorLogos || IsNegative(key)) return null;
-        return await Dedupe(key, () => ScrapeBrandAsync(key, brand, ct)).ConfigureAwait(false);
-    }
-
-    public string? TryGetCachedBrandLogo(string brand)
+    /// <summary>Returns the path of the shipped logo for a brand, an alias or a registered company name; null when there is none.</summary>
+    public string? GetBrandLogo(string brand)
     {
         if (string.IsNullOrWhiteSpace(brand)) return null;
         var key = KeyFor(brand);
-        return key.Length == 0 ? null : FindCached(key);
-    }
-
-    public async Task PrefetchAllAsync(IProgress<ScanProgress>? progress, CancellationToken ct = default)
-    {
-        var entries = Catalog.Entries;
-        int done = 0, found = 0;
-        progress?.Report(new ScanProgress("Prefetching vendor logos", 0, $"0/{entries.Count}"));
-        await Parallel.ForEachAsync(entries, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct }, async (e, token) =>
+        if (!BundledLogos.TryGetValue(key, out var resource)) return null;
+        var path = Path.Combine(_cacheDir, key + ".png");
+        lock (_extractLock)
         {
-            string? path = null;
-            try { path = await GetBrandLogoAsync(e.Brand, token).ConfigureAwait(false); }
-            catch (OperationCanceledException) { throw; }
-            catch (Exception ex) { _log.LogDebug(ex, "Prefetch {Brand}", e.Brand); }
-            if (path is not null) Interlocked.Increment(ref found);
-            int n = Interlocked.Increment(ref done);
-            progress?.Report(new ScanProgress("Prefetching vendor logos", (double)n / entries.Count, $"{n}/{entries.Count} ({e.Brand})"));
-        }).ConfigureAwait(false);
-        _log.LogInformation("Logo prefetch finished: {Found}/{Total} brands have logos", found, entries.Count);
+            if (File.Exists(path)) return path;
+            using var s = Asm.GetManifestResourceStream(resource)!;
+            using var ms = new MemoryStream();
+            s.CopyTo(ms);
+            return Save(key, new LogoImage(ms.ToArray(), ".png", new Uri("about:bundled"), "bundled"));
+        }
     }
 
     // ------------------------------------------------------------------------------------------------
 
-    /// <summary>Cache key for a brand: the catalog's canonical brand if known, else the normalized brand.</summary>
+    /// <summary>Logo key for a brand: the catalog's canonical brand if known, else the normalized brand.</summary>
     internal string KeyFor(string brand)
     {
         var canonical = Catalog.Find(brand)?.Brand ?? BrandNormalizer.Normalize(brand) ?? brand;
@@ -153,28 +136,6 @@ public sealed class VendorLogoService : ILogoProvider, IDisposable
         return lazy.Value;
     }
 
-    private async Task<string?> ScrapeBrandAsync(string key, string brand, CancellationToken ct)
-    {
-        await _gate.WaitAsync(ct).ConfigureAwait(false);
-        try
-        {
-            if (FindCached(key) is { } cached) return cached;
-            var domains = Catalog.CandidateDomains(brand);
-            if (domains.Count == 0) { MarkNegative(key); return null; }
-            var img = await _scraper.ScrapeAsync(domains, ct).ConfigureAwait(false);
-            if (img is null)
-            {
-                _log.LogDebug("No logo found for {Brand} ({Domains})", brand, string.Join(", ", domains));
-                MarkNegative(key);
-                return null;
-            }
-            var path = Save(key, img);
-            _log.LogInformation("Cached logo for {Brand}: {Kind} from {Url}", brand, img.Kind, img.Source);
-            return path;
-        }
-        finally { _gate.Release(); }
-    }
-
     private async Task<string?> FetchIconAsync(string key, Uri url, CancellationToken ct)
     {
         if (FindCached(key) is { } cached) return cached;
@@ -182,11 +143,33 @@ public sealed class VendorLogoService : ILogoProvider, IDisposable
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            var img = await _lanScraper.DownloadImageAsync(url, "device-icon", ct).ConfigureAwait(false);
+            var img = await _icons.DownloadImageAsync(url, "device-icon", ct).ConfigureAwait(false);
             if (img is null) { MarkNegative(key); return null; }
             return Save(key, img);
         }
         finally { _gate.Release(); }
+    }
+
+    /// <summary>
+    /// Extracted logos stay valid only for the build that shipped them, and profiles from older versions hold logos scraped
+    /// from the web. Device icons are keyed by their URL and stay.
+    /// </summary>
+    private void DiscardOutdatedBrandLogos()
+    {
+        var marker = Path.Combine(_cacheDir, RevisionFile);
+        try
+        {
+            var bytes = BundledLogos.Values.Sum(r => { using var s = Asm.GetManifestResourceStream(r)!; return s.Length; });
+            var revision = $"bundled+{BundledLogos.Count}+{bytes}";
+            if (File.Exists(marker) && File.ReadAllText(marker) == revision) return;
+            foreach (var file in Directory.GetFiles(_cacheDir))
+                if (!Path.GetFileName(file).StartsWith("icon-", StringComparison.Ordinal)) TryDelete(file);
+            File.WriteAllText(marker, revision);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log.LogDebug(ex, "Could not refresh the logo folder");
+        }
     }
 
     private string Save(string key, LogoImage img)
@@ -239,7 +222,6 @@ public sealed class VendorLogoService : ILogoProvider, IDisposable
 
     public void Dispose()
     {
-        _web.Dispose();
         _lan.Dispose();
         _gate.Dispose();
     }

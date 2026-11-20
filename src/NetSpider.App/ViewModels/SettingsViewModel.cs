@@ -24,16 +24,13 @@ public sealed partial class WebhookItem(WebhookConfig cfg) : ObservableObject
 }
 
 /// <summary>Edits <see cref="AppSettings"/> directly (scalar fields bind straight to it); lists are staged and written on Save.</summary>
-public sealed partial class SettingsViewModel : ObservableObject, IDisposable
+public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly ISettingsStore _store;
-    private readonly ILogoProvider? _logos;
-    private CancellationTokenSource? _prefetchCts;
 
     public SettingsViewModel(IServiceProvider sp, ISettingsStore store)
     {
         _store = store;
-        _logos = sp.GetService<ILogoProvider>();
         Agents = sp.GetRequiredService<AgentsViewModel>();
         Load();
     }
@@ -49,11 +46,6 @@ public sealed partial class SettingsViewModel : ObservableObject, IDisposable
     public ObservableCollection<WebhookItem> Webhooks { get; } = [];
     [ObservableProperty] private string _newCommunity = "";
     [ObservableProperty] private string? _status;
-    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(PrefetchLogosCommand))] private bool _isPrefetching;
-    [ObservableProperty] private double _prefetchProgress;
-    [ObservableProperty] private string _prefetchText = "";
-    public bool LogosAvailable => _logos is not null;
-    public string PrefetchTooltip => _logos is null ? "Logo service not available in this build" : "Download and cache the logos of every vendor in vendors.json";
     public string SettingsPath => Path.Combine(Core.Services.AppPaths.Root, "settings.json");
 
     // ---- typed proxies for numeric fields (NumericUpDown binds decimal?) ----
@@ -126,32 +118,5 @@ public sealed partial class SettingsViewModel : ObservableObject, IDisposable
 
     [RelayCommand] private void Revert() { Load(); OnPropertyChanged(string.Empty); Status = "Reverted unsaved list edits"; }
 
-    private bool CanPrefetch() => _logos is not null && !IsPrefetching;
-
-    [RelayCommand(CanExecute = nameof(CanPrefetch))]
-    private async Task PrefetchLogos()
-    {
-        if (_logos is null) return;
-        IsPrefetching = true;
-        _prefetchCts = new CancellationTokenSource();
-        var progress = new Progress<ScanProgress>(p => { PrefetchProgress = p.Fraction * 100; PrefetchText = p.Detail ?? p.Stage; });
-        try
-        {
-            await Task.Run(() => _logos.PrefetchAllAsync(progress, _prefetchCts.Token));
-            PrefetchText = "Logo cache is warm";
-            PrefetchProgress = 100;
-        }
-        catch (OperationCanceledException) { PrefetchText = "Cancelled"; }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Logo prefetch failed");
-            PrefetchText = "Failed: " + ex.Message;
-        }
-        finally { IsPrefetching = false; }
-    }
-
-    [RelayCommand] private void CancelPrefetch() => _prefetchCts?.Cancel();
     [RelayCommand] private void OpenDataFolder() => Services.Launcher.Open(Core.Services.AppPaths.Root);
-
-    public void Dispose() => _prefetchCts?.Cancel();
 }

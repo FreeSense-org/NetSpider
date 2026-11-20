@@ -52,7 +52,6 @@ ExCSS                                       MIT            https://github.com/Ty
 CommunityToolkit.Mvvm                       MIT            https://github.com/CommunityToolkit/dotnet
 SharpPcap                                   MIT            https://github.com/dotpcap/sharppcap
 PacketDotNet                                MPL-2.0        https://github.com/dotpcap/packetnet
-AngleSharp                                  MIT            https://github.com/AngleSharp/AngleSharp
 Lextm.SharpSnmpLib (#SNMP)                  MIT            https://github.com/lextudio/sharpsnmplib
 Serilog, Serilog.Sinks.File,                Apache-2.0     https://github.com/serilog/serilog
   Serilog.Sinks.Console,
@@ -77,7 +76,7 @@ Tmds.DBus.Protocol (Copyright (c) Tom Deseyn); SkiaSharp and HarfBuzzSharp
 Corporation); Svg.Skia, Svg.Model, ShimSkiaSharp, Avalonia.Svg.Skia (Copyright (c)
 Wiesław Šoltés); ExCSS (Copyright (c) Tyler Brinks); CommunityToolkit.Mvvm
 (Copyright (c) .NET Foundation and Contributors); SharpPcap (Copyright (c) Tamir
-Gal, Chris Morgan and others); AngleSharp (Copyright (c) AngleSharp); #SNMP /
+Gal, Chris Morgan and others); #SNMP /
 Lextm.SharpSnmpLib (Copyright (c) Malcolm Crowe, Lex Li, and other contributors);
 Velopack (Copyright (c) Velopack Ltd.); HarfBuzz (Old MIT variant, Copyright (c)
 the HarfBuzz authors).
@@ -201,3 +200,24 @@ from https://npcap.com and launch it after verifying its Authenticode signature;
 you install Npcap separately and accept its own license
 (https://npcap.com/oem/redist.html, https://github.com/nmap/npcap/blob/master/LICENSE).
 NetSpider talks to Npcap through SharpPcap at run time only.
+
+--------------------------------------------------------------------------------
+Vendor names and logos
+--------------------------------------------------------------------------------
+All company names, product names, logos and trademarks shown in NetSpider are the
+property of their respective owners. We respect those rights and the work behind
+these brands.
+
+NetSpider shows a vendor's name and logo only to help you recognise who made a
+device on your own network. That use does not mean NetSpider or FreeSense is
+affiliated with, sponsored by or endorsed by any of these companies.
+
+The logos in src/NetSpider.Fingerprint/Data/Logos are not covered by NetSpider's
+license. They are not ours to license, so please don't reuse them from this project;
+ask the owner instead.
+
+Sources of the logos: the vendors' own websites, Wikimedia Commons, Wikipedia and
+Brands of the World.
+
+If a logo is yours and you would like it changed or removed, please open an issue
+at https://github.com/FreeSense-org/NetSpider/issues and we will take care of it.

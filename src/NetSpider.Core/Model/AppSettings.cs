@@ -116,7 +116,6 @@ public sealed class AppSettings
     public bool DumpPcapOnAlert { get; set; } = true;
 
     // ---- logos ----
-    public bool ScrapeVendorLogos { get; set; } = true;
 
     // ---- notifications ----
     public List<WebhookConfig> Webhooks { get; set; } = [];

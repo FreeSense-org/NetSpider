@@ -311,7 +311,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _demo.Stop();
         try { _orchestrator?.StopAll(); } catch (Exception ex) { Log.Warning(ex, "Stopping orchestrator failed"); }
         _engine.Dispose();
-        Settings.Dispose();
     }
 
     private void UpdateStats()

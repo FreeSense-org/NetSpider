@@ -237,10 +237,9 @@ public interface IDeviceClassifier
 
 public interface ILogoProvider
 {
-    /// <summary>Returns a cached PNG path for the device's brand/icon, fetching if needed; null when nothing found.</summary>
+    /// <summary>Returns the image path for the device's own icon or its brand's shipped logo; null when there is neither.</summary>
     Task<string?> GetLogoAsync(Device device, CancellationToken ct = default);
-    string? TryGetCachedBrandLogo(string brand);
-    Task PrefetchAllAsync(IProgress<ScanProgress>? progress, CancellationToken ct = default);
+    string? GetBrandLogo(string brand);
 }
 
 // ============================================================================================

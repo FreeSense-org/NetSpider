@@ -38,7 +38,7 @@ public sealed class DemoNetwork : IDisposable
     private readonly Dictionary<Mac, Node> _nodes = new();
     private readonly List<(Mac A, Mac B, LatencyOrigin Origin, string Method)> _pairs = new();
     private readonly Dictionary<string, List<Mac>> _protocolSources = new(StringComparer.OrdinalIgnoreCase);
-    private Dictionary<string, string>? _logoIndex;
+    private readonly ILogoProvider? _logos;
 
     private Random _rng = new(42);
     private Timer? _tickTimer;
@@ -52,7 +52,7 @@ public sealed class DemoNetwork : IDisposable
     private bool _built;
 
     public DemoNetwork(IDeviceStore devices, ITopologyStore topology, IAlertService alerts, INetworkState network, IEventBus bus,
-        AppSettings settings, ILogger<DemoNetwork>? log = null)
+        AppSettings settings, ILogger<DemoNetwork>? log = null, ILogoProvider? logos = null)
     {
         _devices = devices;
         _topology = topology;
@@ -61,6 +61,7 @@ public sealed class DemoNetwork : IDisposable
         _bus = bus;
         _settings = settings;
         _log = log;
+        _logos = logos;
     }
 
     private volatile bool _running;
@@ -720,27 +721,7 @@ public sealed class DemoNetwork : IDisposable
         62078 => "iphone-sync", _ => null,
     };
 
-    private string? FindLogo(string? brand)
-    {
-        if (string.IsNullOrWhiteSpace(brand)) return null;
-        if (_logoIndex is null)
-        {
-            _logoIndex = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            try
-            {
-                string[] ext = [".png", ".svg", ".ico", ".jpg", ".jpeg", ".webp"];
-                foreach (var f in Directory.EnumerateFiles(AppPaths.Logos))
-                    if (ext.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
-                        _logoIndex.TryAdd(Path.GetFileNameWithoutExtension(f), f);
-            }
-            catch (Exception ex) { _log?.LogDebug(ex, "Logo cache not readable"); }
-        }
-        if (_logoIndex.TryGetValue(brand, out var path)) return path;
-        var compact = new string(brand.Where(char.IsLetterOrDigit).ToArray());
-        if (_logoIndex.TryGetValue(compact, out path)) return path;
-        var first = brand.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
-        return _logoIndex.TryGetValue(first, out path) ? path : null;
-    }
+    private string? FindLogo(string? brand) => string.IsNullOrWhiteSpace(brand) ? null : _logos?.GetBrandLogo(brand);
 
     // ============================================================================================
     //  Switch tables, pairs, network state, alerts

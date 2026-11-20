@@ -419,20 +419,6 @@
           </StackPanel>
         </Border>
 
-        <!-- logos -->
-        <Border Classes="card">
-          <StackPanel>
-            <TextBlock Text="LOGOS" Classes="section" Margin="0,0,0,6" />
-            <CheckBox IsChecked="{Binding Settings.ScrapeVendorLogos}" Content="Scrape vendor logos from vendor websites (cached locally)" />
-            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
-              <Button Classes="accent" Command="{Binding PrefetchLogosCommand}" Content="Prefetch all logos" ToolTip.Tip="{Binding PrefetchTooltip}" ToolTip.ShowOnDisabled="True" />
-              <Button Classes="ghost" Command="{Binding CancelPrefetchCommand}" Content="Cancel" IsVisible="{Binding IsPrefetching}" />
-              <ProgressBar Value="{Binding PrefetchProgress}" Maximum="100" Width="240" Height="6" MinHeight="6" VerticalAlignment="Center" IsVisible="{Binding IsPrefetching}" />
-              <TextBlock Text="{Binding PrefetchText}" Classes="dim" VerticalAlignment="Center" />
-            </StackPanel>
-          </StackPanel>
-        </Border>
-
         <!-- notifications -->
         <Border Classes="card">
           <StackPanel>

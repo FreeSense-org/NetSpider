@@ -6,6 +6,21 @@ Version numbers are computed from this file, so every pull request that changes 
 
 ## [Unreleased]
 
+### Improved
+
+- Vendor logos for about 300 companies are built into NetSpider, so they work offline, appear instantly and scans no longer contact vendor websites for them.
+
+### Fixed
+
+- Lenovo laptops registered under their manufacturer LCFC show the Lenovo name and logo instead of Leicester City Football Club's.
+- A device can no longer pick up the logo of an unrelated company that happens to share its name, because logos are no longer looked up on the internet.
+- Sharp, Technicolor, Vizio, Roku and Apple devices show their own vendor's logo instead of another company's logo or a promotional image.
+- Companies with names close to a well-known brand, such as SonoSite and Juniper Systems, are no longer identified as that brand.
+
+### Removed
+
+- The "Scrape vendor logos" setting and the "Prefetch all logos" button are gone because logos no longer need to be downloaded.
+
 ## [1.0.2] - 2026-10-14
 
 ### Improved
