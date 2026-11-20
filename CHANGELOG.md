@@ -6,6 +6,8 @@ Version numbers are computed from this file, so every pull request that changes 
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-11-20
+
 ### Improved
 
 - Vendor logos for about 300 companies are built into NetSpider, so they work offline, appear instantly and scans no longer contact vendor websites for them.
